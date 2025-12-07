@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enter CV Details</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Enter Your CV Details</h1>
+        <p class="subtitle">This information will be stored in our B-tree database</p>
+
+        <form id="cvForm">
+            <!-- Personal Information -->
+            <div class="form-section">
+                <h2>Personal Information</h2>
+                
+                <div class="input-group">
+                    <label for="fullName">Full Name *</label>
+                    <input type="text" id="fullName" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" required>
+                </div>
+            </div>
+
+            <!-- Professional Details -->
+            <div class="form-section">
+                <h2>Professional Details</h2>
+                
+                <div class="input-group">
+                    <label for="skills">Skills (comma separated) *</label>
+                    <input type="text" id="skills" placeholder="C++, Python, SQL, JavaScript" required>
+                    <small>Example: Java, Spring Boot, MySQL, Docker</small>
+                </div>
+                
+                <div class="input-group">
+                    <label for="experience">Years of Experience *</label>
+                    <input type="number" id="experience" min="0" max="50" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="lastPosition">Last Position *</label>
+                    <input type="text" id="lastPosition" placeholder="Software Engineer" required>
+                </div>
+            </div>
+
+            <!-- Additional Info (Optional) -->
+            <div class="form-section">
+                <h2>Additional Information (Optional)</h2>
+                
+                <div class="input-group">
+                    <label for="education">Education</label>
+                    <input type="text" id="education" placeholder="Bachelor's in Computer Science">
+                </div>
+                
+                <div class="input-group">
+                    <label for="location">Location</label>
+                    <input type="text" id="location" placeholder="City, Country">
+                </div>
+                
+                <div class="input-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone">
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-large">Save to Database</button>
+                <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear Form</button>
+            </div>
+        </form>
+
+        <!-- Loading Spinner -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Storing in B-tree database...</p>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="message" class="message"></div>
+
+        <!-- Database Info -->
+        <div class="db-info">
+            <h3>Database Information</h3>
+            <p>Your data will be stored in our custom B-tree database with:</p>
+            <ul>
+                <li>Primary Index: ID → Record location</li>
+                <li>Secondary Index: Email → Record location</li>
+                <li>Search time: O(log n)</li>
+                <li>Block size: 1KB</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

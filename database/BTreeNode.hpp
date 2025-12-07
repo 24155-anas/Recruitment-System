@@ -1,80 +1,67 @@
-#ifndef BTREENODE_H
-#define BTREENODE_H
+
+
+
+#ifndef BTREE_NODE_H
+#define BTREE_NODE_H
 
 #include <cstdint>
 #include <cstring>
 #include <iostream>
 
-const int BLOCK_SIZE = 4096;
-const int ORDER = 10;
+const int ORDER = 20;  // Higher order since we have 4KB blocks
+
+// Index Entry - stores mapping from ID to physical location
+struct IndexEntry {
+    int32_t key;           // User ID or CV ID
+    int32_t blockNum;      // Block number in data file
+    int32_t offset;        // Offset within that block
+    
+    IndexEntry() : key(-1), blockNum(-1), offset(-1) {}
+    IndexEntry(int32_t k, int32_t b, int32_t o) : key(k), blockNum(b), offset(o) {}
+    
+    bool operator<(const IndexEntry& other) const {
+        return key < other.key;
+    }
+
+    bool operator >(const IndexEntry& other) const {
+        return key > other.key;
+    }
+    
+    bool operator==(const IndexEntry& other) const {
+        return key == other.key;
+    }
+};
 
 class BTreeNode {
 public:
-    struct IndexEntry {
-        int32_t key;            // Candidate ID
-        int64_t dataOffset;     // Offset in data file
-        int32_t recordSize;     // Size of record
-        
-        IndexEntry() : key(-1), dataOffset(-1), recordSize(0) {}
-        IndexEntry(int k, int64_t off, int sz) : key(k), dataOffset(off), recordSize(sz) {}
-    };
-    
-    IndexEntry indexEntries[ORDER - 1];
-    int numKeys;
     bool isLeaf;
+    int32_t numKeys;
+    IndexEntry entries[ORDER - 1];
+    int32_t children[ORDER];  // Block numbers of child nodes
+    int32_t blockIndex;       // This node's block number
     
-    int diskPointers[ORDER];
-    BTreeNode* memPointers[ORDER];
-    
-    int blockIndex;
-    bool isDirty;
-    
-    BTreeNode(bool leaf = true) {
-        isLeaf = leaf;
-        numKeys = 0;
-        blockIndex = -1;
-        isDirty = false;
-        
+    BTreeNode(bool leaf = true) : isLeaf(leaf), numKeys(0), blockIndex(-1) {
         for (int i = 0; i < ORDER; i++) {
-            diskPointers[i] = -1;
-            memPointers[i] = nullptr;
+            children[i] = -1;
         }
     }
     
-    int findKey(int key) {
+    bool isFull() const {
+        return numKeys == ORDER - 1;
+    }
+    
+    int findKeyIndex(int32_t key) const {
         int idx = 0;
-        while (idx < numKeys && indexEntries[idx].key < key) {
+        while (idx < numKeys && entries[idx].key < key) {
             idx++;
         }
         return idx;
     }
     
-    bool isFull() {
-        return numKeys == ORDER - 1;
-    }
-    
-    void insertNonFull(const IndexEntry& entry) {
-        // Check for duplicates
-        for (int j = 0; j < numKeys; j++) {
-            if (indexEntries[j].key == entry.key) {
-                std::cout << "Duplicate key " << entry.key << " detected" << std::endl;
-                return;
-            }
-        }
-        
-        int i = numKeys - 1;
-        while (i >= 0 && indexEntries[i].key > entry.key) {
-            indexEntries[i + 1] = indexEntries[i];
-            i--;
-        }
-        
-        indexEntries[i + 1] = entry;
-        numKeys++;
-        isDirty = true;
-    }
-    
+    // Serialize node to buffer
     void serialize(char* buffer) const {
-        memset(buffer, 0, BLOCK_SIZE);
+        int block_size = 4096;
+        memset(buffer, 0, block_size);
         size_t offset = 0;
         
         memcpy(buffer + offset, &isLeaf, sizeof(isLeaf));
@@ -86,16 +73,14 @@ public:
         memcpy(buffer + offset, &blockIndex, sizeof(blockIndex));
         offset += sizeof(blockIndex);
         
-        for (int i = 0; i < ORDER - 1; i++) {
-            memcpy(buffer + offset, &indexEntries[i], sizeof(IndexEntry));
-            offset += sizeof(IndexEntry);
-        }
+        memcpy(buffer + offset, entries, sizeof(entries));
+        offset += sizeof(entries);
         
-        memcpy(buffer + offset, diskPointers, sizeof(diskPointers));
-        offset += sizeof(diskPointers);
+        memcpy(buffer + offset, children, sizeof(children));
     }
     
-    void deserialize(char* buffer) {
+    // Deserialize node from buffer
+    void deserialize(const char* buffer) {
         size_t offset = 0;
         
         memcpy(&isLeaf, buffer + offset, sizeof(isLeaf));
@@ -107,29 +92,20 @@ public:
         memcpy(&blockIndex, buffer + offset, sizeof(blockIndex));
         offset += sizeof(blockIndex);
         
-        for (int i = 0; i < ORDER - 1; i++) {
-            memcpy(&indexEntries[i], buffer + offset, sizeof(IndexEntry));
-            offset += sizeof(IndexEntry);
-        }
+        memcpy(entries, buffer + offset, sizeof(entries));
+        offset += sizeof(entries);
         
-        memcpy(diskPointers, buffer + offset, sizeof(diskPointers));
-        offset += sizeof(diskPointers);
-        
-        for (int i = 0; i < ORDER; i++) {
-            memPointers[i] = nullptr;
-        }
-        
-        isDirty = false;
+        memcpy(children, buffer + offset, sizeof(children));
     }
     
     void print() const {
-        std::cout << "[Block " << blockIndex << "]: ";
+        std::cout << "[Block " << blockIndex << ", " 
+                  << (isLeaf ? "LEAF" : "INTERNAL") << "]: ";
         for (int i = 0; i < numKeys; i++) {
-            std::cout << indexEntries[i].key << "(" 
-                      << indexEntries[i].dataOffset << ") ";
+            std::cout << entries[i].key << " ";
         }
-        if (!isLeaf) std::cout << " [Internal]";
         std::cout << std::endl;
     }
 };
+
 #endif
