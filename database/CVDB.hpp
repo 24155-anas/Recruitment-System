@@ -6,16 +6,19 @@
 #include "DataRecords.hpp"
 #include <vector>
 #include <string>
+using namespace std;
 
 class CVDatabase {
 private:
-    BlockManager* indexMgr;
-    BlockManager* dataMgr;
+    BlockManager* indexMgr; //for b tree index file for cvs
+    BlockManager* dataMgr; //for actual data file for cvs
     BTree* btree;
 
     int32_t nextCvId;   //id assign krne k liye, future me aik function banaon ga jo unique id
     int32_t currentDataBlock; //kis block me mai abhi data rakhwa raha hon
     
+    //alloacat a new data block
+    // then write initial header in it
     int32_t allocateDataBlock() {
         int32_t blockNum = dataMgr->allocateBlock();
         
@@ -35,8 +38,7 @@ private:
     }
     
 public:
-    CVDatabase(const std::string& indexFile, const std::string& dataFile) 
-        : nextCvId(1), currentDataBlock(-1) {
+    CVDatabase(const std::string& indexFile, const std::string& dataFile) : nextCvId(1), currentDataBlock(-1) {
         
         indexMgr = new BlockManager(indexFile);
         dataMgr = new BlockManager(dataFile);
@@ -78,6 +80,7 @@ public:
         delete dataMgr;
     }
     
+    //add a cv to cv data file
     int32_t addCV(int32_t userId, const std::string& name, const std::string& email,
                  const std::string& skills, int32_t experience, 
                  const std::string& lastPosition, const std::string& education,
@@ -126,23 +129,27 @@ public:
         dataMgr->write(currentDataBlock, buffer);
         dataMgr->incrementRecordCount();
         
-        
+        //insert the index entry for this cv in b tree aswell
         IndexEntry entry(cv.cvId, currentDataBlock, offset);
         btree->insert(entry);
         
-        std::cout << "✓ CV " << cv.cvId << " added for user " << userId << std::endl;
+        std::cout << "CV " << cv.cvId << " added for user " << userId << std::endl;
         return cv.cvId;
     }
     
+    //find cv by id
     CVRecord* getCVById(int32_t cvId) {
         IndexEntry entry;
+        //pehle b tree me search krlo
         if (btree->search(cvId, entry)) {
             char buffer[BLOCK_SIZE];
+            //then if success, read from data file
             dataMgr->read(entry.blockNum, buffer);
             
             CVRecord* cv = new CVRecord();
             memcpy(cv, buffer + entry.offset, CVRecord::size());
             
+            //check if deleted
             if (cv->isDeleted) {
                 delete cv;
                 return nullptr;
@@ -168,26 +175,27 @@ public:
     bool deleteCV(int32_t cvId) {
         IndexEntry entry;
         if (btree->search(cvId, entry)) {
-            // Mark as deleted in data file
             char buffer[BLOCK_SIZE];
             dataMgr->read(entry.blockNum, buffer);
             
             CVRecord cv;
             memcpy(&cv, buffer + entry.offset, CVRecord::size());
+            //just mark as deleted
             cv.isDeleted = true;
             
             memcpy(buffer + entry.offset, &cv, CVRecord::size());
             dataMgr->write(entry.blockNum, buffer);
             dataMgr->decrementRecordCount();
             
-            // Remove from B-tree
-            btree->remove(cvId);
+            //remove from b gtree
+            btree->remove(cvId); //b tree me remove.add etc funcftions me helpwers use ha jo automatically
+            //index files me bhi changes kr dete hain
             
-            std::cout << "✓ CV " << cvId << " deleted" << std::endl;
+            std::cout << "CV " << cvId << " deleted" << std::endl;
             return true;
         }
         
-        std::cout << "✗ CV " << cvId << " not found" << std::endl;
+        std::cout << "CV " << cvId << " not found" << std::endl;
         return false;
     }
     

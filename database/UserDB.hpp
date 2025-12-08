@@ -1,171 +1,3 @@
-// #ifndef USERDB_H
-// #define USERDB_H
-
-// #include "Btree.hpp"
-// #include <fstream>
-// #include <iostream>
-// #include <string>
-// #include <functional>
-// #include <cstring>
-
-// struct UserRecord {
-//     int32_t id;
-//     char username[50];
-//     char email[100];
-//     char password[50];
-//     char fullName[100];
-    
-//     UserRecord() : id(-1) {
-//         memset(username, 0, sizeof(username));
-//         memset(email, 0, sizeof(email));
-//         memset(password, 0, sizeof(password));
-//         memset(fullName, 0, sizeof(fullName));
-//     }
-    
-//     UserRecord(int32_t id_, const char* uname, const char* em, 
-//                const char* pwd, const char* name) 
-//         : id(id_) {
-//         strncpy(username, uname, sizeof(username)-1);
-//         username[sizeof(username)-1] = '\0';
-        
-//         strncpy(email, em, sizeof(email)-1);
-//         email[sizeof(email)-1] = '\0';
-        
-//         strncpy(password, pwd, sizeof(password)-1);
-//         password[sizeof(password)-1] = '\0';
-        
-//         strncpy(fullName, name, sizeof(fullName)-1);
-//         fullName[sizeof(fullName)-1] = '\0';
-//     }
-// };
-
-// class UserDB {
-// private:
-//     BTree* indexTree;
-//     std::fstream dataFile;
-//     std::string dataFilename;
-//     int32_t nextId;
-    
-// public:
-//     UserDB(const std::string& indexFile, const std::string& dataFile)
-//         : dataFilename(dataFile), nextId(1) {
-        
-//         indexTree = new BTree(indexFile);
-        
-//         this->dataFile.open(dataFilename, 
-//             std::ios::in | std::ios::out | std::ios::binary | std::ios::app);
-        
-//         if (!this->dataFile.is_open()) {
-//             this->dataFile.open(dataFilename, std::ios::out | std::ios::binary);
-//             this->dataFile.close();
-//             this->dataFile.open(dataFilename, 
-//                 std::ios::in | std::ios::out | std::ios::binary);
-//         }
-        
-//         // Find next ID
-//         this->dataFile.seekg(0, std::ios::end);
-//         std::streampos size = this->dataFile.tellg();
-//         if (size > 0) {
-//             nextId = (size / sizeof(UserRecord)) + 1;
-//         }
-//     }
-    
-//     ~UserDB() {
-//         dataFile.close();
-//         delete indexTree;
-//     }
-    
-//     // Register new user
-//     int32_t registerUser(const std::string& username, 
-//                         const std::string& email,
-//                         const std::string& password,
-//                         const std::string& fullName) {
-        
-//         // Check if username exists
-//         if (usernameExists(username)) {
-//             std::cout << "Username already exists!" << std::endl;
-//             return -1;
-//         }
-        
-//         // Create user record
-//         UserRecord user(nextId, username.c_str(), email.c_str(), 
-//                        password.c_str(), fullName.c_str());
-        
-//         // Write to data file
-//         dataFile.seekp(0, std::ios::end);
-//         int64_t offset = dataFile.tellp();
-        
-//         dataFile.write(reinterpret_cast<const char*>(&user), sizeof(UserRecord));
-//         dataFile.flush();
-        
-//         // Add to B-tree index
-//         BTreeNode::IndexEntry entry(user.id, offset, sizeof(UserRecord));
-//         indexTree->insert(entry);
-        
-//         std::cout << "Registered user ID " << user.id 
-//                   << " with username " << username << std::endl;
-        
-//         return nextId++;
-//     }
-    
-//     // Login user
-//     UserRecord* loginUser(const std::string& username, const std::string& password) {
-//         // Search all users for matching username
-//         dataFile.seekg(0);
-//         while (dataFile) {
-//             UserRecord user;
-//             dataFile.read(reinterpret_cast<char*>(&user), sizeof(UserRecord));
-            
-//             if (dataFile.gcount() == sizeof(UserRecord)) {
-//                 if (std::string(user.username) == username) {
-//                     // Check password
-//                     if (std::string(user.password) == password) {
-//                         UserRecord* foundUser = new UserRecord();
-//                         *foundUser = user;
-//                         return foundUser;
-//                     } else {
-//                         std::cout << "Invalid password!" << std::endl;
-//                         return nullptr;
-//                     }
-//                 }
-//             }
-//         }
-        
-//         std::cout << "User not found!" << std::endl;
-//         return nullptr;
-//     }
-    
-//     // Get user by ID
-//     UserRecord* getUserById(int32_t userId) {
-//         BTreeNode::IndexEntry entry;
-//         if (indexTree->search(userId, entry)) {
-//             dataFile.seekg(entry.dataOffset);
-//             UserRecord* user = new UserRecord();
-//             dataFile.read(reinterpret_cast<char*>(user), sizeof(UserRecord));
-//             return user;
-//         }
-//         return nullptr;
-//     }
-    
-// private:
-//     bool usernameExists(const std::string& username) {
-//         dataFile.seekg(0);
-//         while (dataFile) {
-//             UserRecord user;
-//             dataFile.read(reinterpret_cast<char*>(&user), sizeof(UserRecord));
-            
-//             if (dataFile.gcount() == sizeof(UserRecord)) {
-//                 if (std::string(user.username) == username) {
-//                     return true;
-//                 }
-//             }
-//         }
-//         return false;
-//     }
-// };
-
-// #endif
-
 
 
 
@@ -216,8 +48,11 @@ public:
     UserDatabase(const std::string& indexFile, const std::string& dataFile) 
         : nextUserId(1), currentDataBlock(-1) {
         
+        //aik block manager banao index file k liye
         indexMgr = new BlockManager(indexFile);
+        //aik block manager banao data file k liye
         dataMgr = new BlockManager(dataFile);
+        //ab b tree banao index file k uper
         btree = new BTree(indexMgr);
         
         // Find highest user ID
@@ -251,7 +86,7 @@ public:
     }
     
     ~UserDatabase() {
-        delete btree;       // Delete B-tree first (uses indexMgr)
+        delete btree;       
         delete indexMgr;
         delete dataMgr;
     }
@@ -308,7 +143,7 @@ public:
         IndexEntry entry(user.userId, currentDataBlock, offset);
         btree->insert(entry);
         
-        std::cout << "✓ User " << user.userId << " registered" << std::endl;
+        std::cout << "User " << user.userId << " registered" << std::endl;
         return user.userId;
     }
     
@@ -349,11 +184,11 @@ public:
             // Remove from B-tree
             btree->remove(userId);
             
-            std::cout << "✓ User " << userId << " deleted" << std::endl;
+            std::cout << "User " << userId << " deleted" << std::endl;
             return true;
         }
         
-        std::cout << "✗ User " << userId << " not found" << std::endl;
+        std::cout << "User " << userId << " not found" << std::endl;
         return false;
     }
     
@@ -365,12 +200,12 @@ public:
             if (!user.isDeleted && 
                 std::string(user.username) == username && 
                 std::string(user.passwordHash) == passHash) {
-                std::cout << "✓ Login: " << username << std::endl;
+                std::cout << "Login: " << username << std::endl;
                 return user.userId;
             }
         }
         
-        std::cout << "✗ Login failed" << std::endl;
+        std::cout << "Login failed" << std::endl;
         return -1;
     }
     

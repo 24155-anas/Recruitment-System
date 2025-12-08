@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Recruitment System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard">
+            <h2>Welcome to Your Dashboard</h2>
+            <p>Manage your CV and profile here</p>
+            
+            <div class="nav-buttons">
+                <a href="cv-form.html" class="btn btn-primary">Submit or Edit CV</a>
+            </div>
+
+            <div class="user-info">
+                <h3>Your CVs</h3>
+                <div id="cvList">Loading... </div>
+            </div>
+
+            <form id="logoutForm">
+                <button type="submit" class="btn btn-danger">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Load user's CV on dashboard load
+        async function loadCV() {
+            try {
+                let res = await fetch("/get_cv", {method: "GET"});
+                let r = await res.json();
+                if(r.success && r.cv) {
+                    document.getElementById('cvList').innerHTML = `
+                        <div class="cv-item">
+                            <p><strong>Name:</strong> ${r.cv.name}</p>
+                            <p><strong>Email:</strong> ${r.cv.email}</p>
+                            <p><strong>Skills:</strong> ${r.cv.skills}</p>
+                            <p><strong>Experience:</strong> ${r.cv.experience} years</p>
+                            <p><strong>Last Position:</strong> ${r.cv.lastPosition}</p>
+                            <p><strong>Education:</strong> ${r.cv.education}</p>
+                            <p><strong>Location:</strong> ${r.cv. location}</p>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('cvList').innerHTML = "<p>No CV submitted yet.  <a href='cv-form. html'>Submit one now!</a></p>";
+                }
+            } catch(err) {
+                document.getElementById('cvList').innerHTML = "<p>Error loading CV: " + err.message + "</p>";
+            }
+        }
+
+        loadCV();
+
+        // LOGOUT
+        document.getElementById('logoutForm').onsubmit = async (e) => {
+            e.preventDefault();
+            try {
+                let res = await fetch("/logout", {method: "POST"});
+                let r = await res.json();
+                if(r.success) {
+                    window.location = "/index.html";
+                }
+            } catch(err) {
+                alert("Logout error: " + err.message);
+            }
+        };
+    </script>
+</body>
+</html>

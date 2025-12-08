@@ -1,6 +1,3 @@
-
-
-
 #ifndef BTREE_NODE_H
 #define BTREE_NODE_H
 
@@ -8,9 +5,13 @@
 #include <cstring>
 #include <iostream>
 
-const int ORDER = 20;  // Higher order since we have 4KB blocks
+const int ORDER = 20;  //wese order kaafi zyada hona chahoye, but b tree operations check  krne k liye abhi kam rakha
 
-// Index Entry - stores mapping from ID to physical location
+//new structure for index entry
+// isme key is user id ya cv id hogi
+// blockNum is data file ka block number jahan record stored hai
+// offset is us block ke andar offset jahan record start hota hai
+
 struct IndexEntry {
     int32_t key;           // User ID or CV ID
     int32_t blockNum;      // Block number in data file

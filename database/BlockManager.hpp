@@ -15,7 +15,7 @@ const int BITMAP_SIZE = MAX_BLOCKS / 8;  // 125 bytes
 // File Header - stored in Block 0 of every file
 struct FileHeader {
     char signature[8];           // "CVDBFILE"
-    int32_t allocatedBlocksCount;         // Number of blocks allocated
+    int32_t allocatedBlocksCount; // Number of blocks allocated
     int32_t rootBlockIndex;      // Root block for B-tree (index files only)
     int32_t recordCount;         // Total records (data files only)
     uint8_t bitmap[BITMAP_SIZE]; // Block allocation bitmap
@@ -24,7 +24,7 @@ struct FileHeader {
         memset(signature, 0, sizeof(signature));
         strncpy(signature, "CVDBFILE", 7);
         memset(bitmap, 0, BITMAP_SIZE);
-        setBit(0);  // Block 0 is always header
+        setBit(0);  //block 0 is header block
     }
     
     bool isBitSet(int blockNum) const {
@@ -78,32 +78,35 @@ std::ostream& operator<<(std::ostream& os, const FileHeader& header) {
 
 
 
-// Generic Block Manager - works for both index and data files
+
 class BlockManager {
 private:
     std::fstream file;
     std::string filename;
     FileHeader header;
     
+    //read an entire block
     void readBlock(int32_t blockNum, char* buffer) {
         file.seekg(blockNum * BLOCK_SIZE, std::ios::beg);
         file.read(buffer, BLOCK_SIZE);
     }
     
+    //write an entire block
     void writeBlock(int32_t blockNum, const char* buffer) {
         file.seekp(blockNum * BLOCK_SIZE, std::ios::beg);
         file.write(buffer, BLOCK_SIZE);
         file.flush();
     }
     
+    //load header from file in our class header object
     void loadHeader() {
         char buffer[BLOCK_SIZE];
         readBlock(0, buffer);
         memcpy(&header, buffer, sizeof(FileHeader));
     }
     
+    //header ko file me rakhwana
     void saveHeader() {
-        //header ko file me rakhwana
         char buffer[BLOCK_SIZE];
         memset(buffer, 0, BLOCK_SIZE);
         memcpy(buffer, &header, sizeof(FileHeader));
@@ -116,6 +119,7 @@ public:
         loadHeader();
         cout<<this->header;
     }
+
     BlockManager(const std::string& fname) : filename(fname) {
         file.open(filename, std::ios::in | std::ios::out | std::ios::binary);
         
@@ -146,17 +150,21 @@ public:
         }
     }
     
-    // Allocate a new block
+
+    //allocating a new block
     int32_t allocateBlock() {
+        //bitmap me se free block dhoondo
         int32_t blockNum = header.findFreeBlock();
         if (blockNum == -1) {
-            std::cerr << "No free blocks!" << std::endl;
+            std::cerr << "No free blocks" << std::endl;
             return -1;
         }
         
+        //us block ko allocate krdo
         header.setBit(blockNum);
+        //and increase total blocks count
         header.allocatedBlocksCount++;
-        //header file me bhi update krdo
+        //header ko file me bhi update krdo
         saveHeader();
         
         //block ko zero se initialize krdo
@@ -175,6 +183,7 @@ public:
         header.clearBit(blockNum);
         //and reduce totalblocks count
         header.allocatedBlocksCount--;
+        //also update header in file
         saveHeader();
     }
     

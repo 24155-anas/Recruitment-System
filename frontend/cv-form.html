@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit CV - Recruitment System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <h2>Submit Your CV</h2>
+            <form id="cvForm">
+                <input type="text" name="name" placeholder="Full Name" required>
+                <input type="email" name="email" placeholder="Email" required>
+                <input type="text" name="skills" placeholder="Skills (comma separated)" required>
+                <input type="number" name="experience" placeholder="Experience (years)" required>
+                <input type="text" name="lastPosition" placeholder="Last Position" required>
+                <input type="text" name="education" placeholder="Education" required>
+                <input type="text" name="location" placeholder="Location" required>
+                <button type="submit" class="btn btn-primary">Submit CV</button>
+            </form>
+            <p id="msg" class="message"></p>
+        </div>
+
+        <div>
+            <a href="dashboard.html" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('cvForm').onsubmit = async (e) => {
+            e.preventDefault();
+            let data = Object.fromEntries(new FormData(e.target));
+            try {
+                let res = await fetch("/submit_cv", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(data)
+                });
+                let r = await res.json();
+                if(r.success) {
+                    document.getElementById('msg').textContent = "CV submitted successfully!";
+                    document.getElementById('msg').className = "message success";
+                    setTimeout(() => window.location = "/dashboard.html", 2000);
+                } else {
+                    document.getElementById('msg'). textContent = "Error: " + (r.message || "Unknown error");
+                    document.getElementById('msg').className = "message error";
+                }
+            } catch(err) {
+                document. getElementById('msg').textContent = "Error: " + err.message;
+                document.getElementById('msg'). className = "message error";
+            }
+        };
+    </script>
+</body>
+</html>

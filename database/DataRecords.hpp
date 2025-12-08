@@ -5,7 +5,7 @@
 #include <cstring>
 #include <iostream>
 
-// User Record
+//for user data
 struct UserRecord {
     int32_t userId;
     char username[50];
@@ -34,10 +34,10 @@ struct UserRecord {
     }
 };
 
-// CV Record
+//for cv records
 struct CVRecord {
     int32_t cvId;
-    int32_t userId;  // Foreign key
+    int32_t userId;  //foreign key
     char name[50];
     char email[50];
     char skills[200];
@@ -75,7 +75,8 @@ struct CVRecord {
     }
 };
 
-// Data Block Header - stored at start of each data block
+//data BLOCK header
+//har block k start me hoga ye header in data files
 struct DataBlockHeader {
     int32_t blockNumber;
     int32_t recordCount;
