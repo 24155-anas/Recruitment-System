@@ -28,7 +28,7 @@
         </div>
     </div>
 
-    <script>
+    <!-- <script>
         document.getElementById('cvForm').onsubmit = async (e) => {
             e.preventDefault();
             let data = Object.fromEntries(new FormData(e.target));
@@ -52,6 +52,33 @@
                 document.getElementById('msg'). className = "message error";
             }
         };
-    </script>
+    </script> -->
+    <script>
+    const API_BASE = 'http://localhost:8080/api';
+    
+    document.getElementById('cvForm').onsubmit = async (e) => {
+        e.preventDefault();
+        let data = Object.fromEntries(new FormData(e.target));
+        
+        try {
+            let res = await fetch(`${API_BASE}/submit_cv`, {
+                method: 'POST',
+                headers: {"Content-Type": "application/json"},
+                credentials: 'include',
+                body: JSON.stringify(data)
+            });
+            
+            let r = await res.json();
+            if(r.success) {
+                alert("CV submitted successfully!");
+                window. location = "dashboard.html";
+            } else {
+                alert("Failed to submit CV: " + (r.message || ""));
+            }
+        } catch(err) {
+            alert("Error: " + err.message);
+        }
+    };
+</script>
 </body>
 </html>

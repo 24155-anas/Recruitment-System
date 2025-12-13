@@ -27,7 +27,7 @@
         </div>
     </div>
 
-    <script>
+    <!-- <script>
         // Load user's CV on dashboard load
         async function loadCV() {
             try {
@@ -68,6 +68,37 @@
                 alert("Logout error: " + err.message);
             }
         };
-    </script>
+    </script> -->
+
+    <script>
+    const API_BASE = 'http://localhost:8080/api';
+    
+    window.onload = async () => {
+        try {
+            let res = await fetch(`${API_BASE}/get_cv`, {
+                credentials: 'include'
+            });
+            
+            let data = await res.json();
+            
+            if (data.success && data.cv) {
+                // Display CV data
+                document.getElementById('cvData').innerHTML = `
+                    <p><strong>Name:</strong> ${data.cv.name}</p>
+                    <p><strong>Email:</strong> ${data.cv.email}</p>
+                    <p><strong>Skills:</strong> ${data.cv. skills}</p>
+                    <p><strong>Experience:</strong> ${data.cv.experience} years</p>
+                    <p><strong>Last Position:</strong> ${data.cv. lastPosition}</p>
+                    <p><strong>Education:</strong> ${data.cv.education}</p>
+                    <p><strong>Location:</strong> ${data.cv.location}</p>
+                `;
+            } else {
+                document.getElementById('cvData').innerHTML = "No CV found.  Please submit one.";
+            }
+        } catch(err) {
+            document.getElementById('cvData').innerHTML = "Error loading CV: " + err.message;
+        }
+    };
+</script>
 </body>
 </html>

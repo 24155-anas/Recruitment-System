@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1. 0">
+    <title>CV Database - Admin Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+        }
+        
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .filter-section {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .search-bar {
+            flex: 1;
+            min-width: 250px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .search-bar:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .filter-group label {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .filter-group input,
+        .filter-group select {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+        }
+        
+        .stats {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stats strong {
+            color: #667eea;
+            font-size: 18px;
+        }
+        
+        .auto-refresh {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .auto-refresh.active {
+            color: #4caf50;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        tbody tr {
+            transition: background 0.2s;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .cv-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .cv-email {
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .cv-skills {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .skill-tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        
+        .experience-badge {
+            background: #4caf50;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .logout-btn {
+            background: #f44336;
+            padding: 8px 15px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .logout-btn:hover {
+            background: #d32f2f;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .loading {
+            animation: pulse 1. 5s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1>📊 CV Database Dashboard</h1>
+                <p>Recruitment System - Admin Panel</p>
+            </div>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <div class="filter-section">
+            <input type="text" id="searchBox" class="search-bar" placeholder="🔍 Search by name, skills, location, position..." oninput="applyFilters()">
+            
+            <div class="filter-group">
+                <label>Min Experience:</label>
+                <input type="number" id="minExp" min="0" value="0" style="width: 80px;" oninput="applyFilters()">
+            </div>
+            
+            <div class="filter-group">
+                <label>Location:</label>
+                <select id="locationFilter" onchange="applyFilters()">
+                    <option value="">All Locations</option>
+                </select>
+            </div>
+            
+            <button class="btn" onclick="loadCVs()">🔄 Refresh Now</button>
+        </div>
+    </div>
+    
+    <div class="stats">
+        <div id="cvCount"><strong>Loading CVs...</strong></div>
+        <div id="autoRefreshStatus" class="auto-refresh">⏱️ Auto-refresh: Active (5s)</div>
+    </div>
+    
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Candidate</th>
+                    <th>Skills</th>
+                    <th>Experience</th>
+                    <th>Last Position</th>
+                    <th>Education</th>
+                    <th>Location</th>
+                </tr>
+            </thead>
+            <tbody id="cvBody">
+                <tr>
+                    <td colspan="7" class="no-data loading">Loading CV data...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let allCVs = [];
+        let refreshInterval;
+        
+        // Load CVs on page load
+        window.onload = () => {
+            loadCVs();
+            startAutoRefresh();
+        };
+        
+        // Start auto-refresh every 5 seconds
+        function startAutoRefresh() {
+            refreshInterval = setInterval(() => {
+                loadCVs();
+                const status = document.getElementById('autoRefreshStatus');
+                status.classList.add('active');
+                setTimeout(() => status.classList.remove('active'), 500);
+            }, 5000);
+        }
+        
+        // Load CVs from API
+        async function loadCVs() {
+            try {
+                const response = await fetch(`${API_BASE}/cvs/all`, {
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    allCVs = data.cvs;
+                    populateLocationFilter();
+                    applyFilters();
+                } else {
+                    console.error('Error:', data.message);
+                    if (data.message. includes('logged in') || data.message.includes('Unauthorized')) {
+                        alert('Session expired or unauthorized.  Redirecting to login.. .');
+                        window.location. href = 'index.html';
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load CVs:', error);
+                document.getElementById('cvBody').innerHTML = 
+                    '<tr><td colspan="7" class="no-data">❌ Failed to connect to server</td></tr>';
+            }
+        }
+        
+        // Populate location filter dropdown
+        function populateLocationFilter() {
+            const locationFilter = document.getElementById('locationFilter');
+            const locations = [... new Set(allCVs. map(cv => cv.location))]. sort();
+            
+            // Clear existing options except "All Locations"
+            locationFilter.innerHTML = '<option value="">All Locations</option>';
+            
+            locations.forEach(loc => {
+                const option = document.createElement('option');
+                option.value = loc;
+                option.textContent = loc;
+                locationFilter.appendChild(option);
+            });
+        }
+        
+        // Apply filters and display CVs
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const minExp = parseInt(document.getElementById('minExp').value) || 0;
+            const locationFilter = document.getElementById('locationFilter').value;
+            
+            // Filter CVs
+            const filtered = allCVs.filter(cv => {
+                const matchesSearch = cv.name.toLowerCase(). includes(searchTerm) ||
+                                     cv.skills.toLowerCase().includes(searchTerm) ||
+                                     cv.location.toLowerCase().includes(searchTerm) ||
+                                     cv.lastPosition.toLowerCase().includes(searchTerm) ||
+                                     cv.education.toLowerCase().includes(searchTerm);
+                const matchesExp = cv.experience >= minExp;
+                const matchesLocation = ! locationFilter || cv.location === locationFilter;
+                
+                return matchesSearch && matchesExp && matchesLocation;
+            });
+            
+            displayCVs(filtered);
+        }
+        
+        // Display CVs in table
+        function displayCVs(cvs) {
+            const tbody = document.getElementById('cvBody');
+            
+            // Update count
+            document.getElementById('cvCount').innerHTML = 
+                `<strong>Total CVs: ${allCVs.length}</strong> | Showing: ${cvs.length}`;
+            
+            // Clear table
+            tbody.innerHTML = '';
+            
+            // Check if no data
+            if (cvs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="no-data">No CVs found matching your criteria</td></tr>';
+                return;
+            }
+            
+            // Add rows
+            cvs.forEach(cv => {
+                const row = tbody.insertRow();
+                
+                // Parse skills into tags
+                const skills = cv.skills.split(','). map(s => s.trim());
+                const skillTags = skills.slice(0, 3).map(skill => 
+                    `<span class="skill-tag">${skill}</span>`
+                ). join('');
+                const moreSkills = skills.length > 3 ? ` <span class="skill-tag">+${skills.length - 3}</span>` : '';
+                
+                row.innerHTML = `
+                    <td><strong>#${cv.cvId}</strong></td>
+                    <td>
+                        <div class="cv-name">${cv.name}</div>
+                        <div class="cv-email">${cv. email}</div>
+                    </td>
+                    <td><div class="cv-skills">${skillTags}${moreSkills}</div></td>
+                    <td><span class="experience-badge">${cv.experience} years</span></td>
+                    <td>${cv.lastPosition}</td>
+                    <td>${cv.education}</td>
+                    <td>${cv.location}</td>
+                `;
+            });
+        }
+        
+        // Logout function
+        async function logout() {
+            try {
+                await fetch(`${API_BASE}/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+            
+            clearInterval(refreshInterval);
+            window.location.href = 'index.html';
+        }
+        
+        // Clean up interval on page unload
+        window. addEventListener('beforeunload', () => {
+            clearInterval(refreshInterval);
+        });
+    </script>
+</body>
+</html>

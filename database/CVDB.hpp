@@ -6,6 +6,11 @@
 #include "DataRecords.hpp"
 #include <vector>
 #include <string>
+
+#include "CVGraph.hpp"
+
+
+
 using namespace std;
 
 class CVDatabase {
@@ -210,8 +215,33 @@ public:
     }
     
     std::vector<CVRecord> getAllCVs() {
-        std::vector<CVRecord> cvs;
+        // std::vector<CVRecord> cvs;
         
+        // int32_t blockNum = dataMgr->getRootBlock();
+        // while (blockNum != -1) {
+        //     char buffer[BLOCK_SIZE];
+        //     dataMgr->read(blockNum, buffer);
+            
+        //     DataBlockHeader header;
+        //     memcpy(&header, buffer, DataBlockHeader::size());
+            
+        //     for (int i = 0; i < header.recordCount; i++) {
+        //         int32_t offset = DataBlockHeader::size() + (i * CVRecord::size());
+        //         CVRecord cv;
+        //         memcpy(&cv, buffer + offset, CVRecord::size());
+                
+        //         if (!cv.isDeleted) {
+        //             cvs.push_back(cv);
+        //         }
+        //     }
+            
+        //     blockNum = header.nextBlock;
+        // }
+        
+        // return cvs;
+
+        //idhr simply cvs order me return krwado
+        std::vector<CVRecord> cvs;
         int32_t blockNum = dataMgr->getRootBlock();
         while (blockNum != -1) {
             char buffer[BLOCK_SIZE];
@@ -233,8 +263,13 @@ public:
             blockNum = header.nextBlock;
         }
         
+        // Graph g;
+        // for(int i = 0;i<cvs.size();i++){
+        //     g.cv
+        // }
         return cvs;
     }
+        
     
     void printAll() {
         std::cout << "\n=== All CVs ===" << std::endl;
