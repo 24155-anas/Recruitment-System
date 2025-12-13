@@ -1,8 +1,7 @@
-// main.cpp - Complete test of recruitment database system
+// // main.cpp - Complete test of recruitment database system
 #include "database/UserDB.hpp"
 #include "database/CVDB.hpp"
 #include <iostream>
-
 void printSeparator(const std::string& title) {
     std::cout << "\n╔════════════════════════════════════════════════════════╗" << std::endl;
     std::cout << "║  " << title;
@@ -220,3 +219,35 @@ int main() {
     
     return 0;
 }
+
+
+
+#include "database/CVMatcher.hpp"
+
+
+// int main(){
+
+//     CVDatabase cvDB("cv_index.dat", "cv_data.dat");
+
+// // Define job requirement
+// JobRequirement job;
+// job.requiredSkills = "C++,Python";
+// job.minExperience = 4;
+// job.education = "BS CS";
+// job. position = "Software Engineer";
+// job.location = "Lahore";
+// job.minAcceptableScore = 0.50; // 50% minimum
+
+// // Get all CVs and find best matches
+// std::vector<CVRecord> allCVs = cvDB.getAllCVs();
+// std::vector<DetailedScore> topCVs = findBestCVs(allCVs, job, 5);
+
+// std::cout << "\n🎯 TOP 5 CANDIDATES FOR:  " << job.position << "\n";
+// std::cout << "Required:  " << job.requiredSkills << ", " << job.minExperience << " years\n";
+
+// for (size_t i = 0; i < topCVs.size(); i++) {
+//     std::cout << "\n" << (i + 1) << ". ";
+//     topCVs[i].print();
+// }
+
+// }

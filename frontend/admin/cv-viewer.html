@@ -234,7 +234,26 @@
             <button class="logout-btn" onclick="logout()">Logout</button>
         </div>
     </div>
-    
+
+    <div class="controls">
+    <h3 style="margin-bottom: 15px;">🎯 Job Requirements (for Ranking)</h3>
+    <div class="filter-section">
+        <input type="text" id="jobSkills" class="search-bar" placeholder="Required Skills (e.g., C++,Python)" value="C++,Python">
+        
+        <div class="filter-group">
+            <label>Min Experience: </label>
+            <input type="number" id="jobExp" min="0" value="3" style="width: 80px;">
+        </div>
+        
+        <div class="filter-group">
+            <label>Position:</label>
+            <input type="text" id="jobPosition" value="Software Engineer" style="width:  150px;">
+        </div>
+        
+        <button class="btn" onclick="rankCVs()">🔄 Rank CVs</button>
+    </div>
+</div>
+
     <div class="controls">
         <div class="filter-section">
             <input type="text" id="searchBox" class="search-bar" placeholder="🔍 Search by name, skills, location, position..." oninput="applyFilters()">
@@ -264,6 +283,8 @@
         <table>
             <thead>
                 <tr>
+                    <th>Rank</th>         <!-- ADD THIS -->
+                    <th>Score</th>   
                     <th>ID</th>
                     <th>Candidate</th>
                     <th>Skills</th>
@@ -302,32 +323,74 @@
             }, 5000);
         }
         
-        // Load CVs from API
-        async function loadCVs() {
-            try {
-                const response = await fetch(`${API_BASE}/cvs/all`, {
-                    credentials: 'include'
-                });
+        // // Load CVs from API
+        // async function loadCVs() {
+        //     try {
+        //         const response = await fetch(`${API_BASE}/cvs/all`, {
+        //             credentials: 'include'
+        //         });
                 
-                const data = await response.json();
+        //         const data = await response.json();
                 
-                if (data.success) {
-                    allCVs = data.cvs;
-                    populateLocationFilter();
-                    applyFilters();
-                } else {
-                    console.error('Error:', data.message);
-                    if (data.message. includes('logged in') || data.message.includes('Unauthorized')) {
-                        alert('Session expired or unauthorized.  Redirecting to login.. .');
-                        window.location. href = 'index.html';
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to load CVs:', error);
-                document.getElementById('cvBody').innerHTML = 
-                    '<tr><td colspan="7" class="no-data">❌ Failed to connect to server</td></tr>';
+        //         if (data.success) {
+        //             allCVs = data.cvs;
+        //             populateLocationFilter();
+        //             applyFilters();
+        //         } else {
+        //             console.error('Error:', data.message);
+        //             if (data.message. includes('logged in') || data.message.includes('Unauthorized')) {
+        //                 alert('Session expired or unauthorized.  Redirecting to login.. .');
+        //                 window.location. href = 'index.html';
+        //             }
+        //         }
+        //     } catch (error) {
+        //         console.error('Failed to load CVs:', error);
+        //         document.getElementById('cvBody').innerHTML = 
+        //             '<tr><td colspan="7" class="no-data">❌ Failed to connect to server</td></tr>';
+        //     }
+        // }
+
+
+        // Load CVs from API with ranking
+async function loadCVs() {
+    try {
+        // Get job requirements from form
+        const skills = document.getElementById('jobSkills')?.value || 'C++,Python';
+        const experience = document.getElementById('jobExp')?.value || '3';
+        const position = document.getElementById('jobPosition')?.value || 'Software Engineer';
+        
+        const response = await fetch(
+            `${API_BASE}/cvs/all?skills=${encodeURIComponent(skills)}&experience=${experience}&position=${encodeURIComponent(position)}`, 
+            {
+                credentials:  'include'
+            }
+        );
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            allCVs = data.cvs;  // Already sorted by score! 
+            populateLocationFilter();
+            applyFilters();
+        } else {
+            console.error('Error:', data.message);
+            if (data.message. includes('logged in') || data.message.includes('Unauthorized')) {
+                alert('Session expired or unauthorized.  Redirecting to login.. .');
+                window.location.href = 'index.html';
             }
         }
+    } catch (error) {
+        console.error('Failed to load CVs:', error);
+        document.getElementById('cvBody').innerHTML = 
+            '<tr><td colspan="9" class="no-data">❌ Failed to connect to server</td></tr>';
+    }
+}
+
+// Add rank CVs button handler
+function rankCVs() {
+    loadCVs();
+}
+
         
         // Populate location filter dropdown
         function populateLocationFilter() {
@@ -367,48 +430,108 @@
             displayCVs(filtered);
         }
         
-        // Display CVs in table
-        function displayCVs(cvs) {
-            const tbody = document.getElementById('cvBody');
+        // // Display CVs in table
+        // function displayCVs(cvs) {
+        //     const tbody = document.getElementById('cvBody');
             
-            // Update count
-            document.getElementById('cvCount').innerHTML = 
-                `<strong>Total CVs: ${allCVs.length}</strong> | Showing: ${cvs.length}`;
+        //     // Update count
+        //     document.getElementById('cvCount').innerHTML = 
+        //         `<strong>Total CVs: ${allCVs.length}</strong> | Showing: ${cvs.length}`;
             
-            // Clear table
-            tbody.innerHTML = '';
+        //     // Clear table
+        //     tbody.innerHTML = '';
             
-            // Check if no data
-            if (cvs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="no-data">No CVs found matching your criteria</td></tr>';
-                return;
-            }
+        //     // Check if no data
+        //     if (cvs.length === 0) {
+        //         tbody.innerHTML = '<tr><td colspan="7" class="no-data">No CVs found matching your criteria</td></tr>';
+        //         return;
+        //     }
             
-            // Add rows
-            cvs.forEach(cv => {
-                const row = tbody.insertRow();
+        //     // Add rows
+        //     cvs.forEach(cv => {
+        //         const row = tbody.insertRow();
                 
-                // Parse skills into tags
-                const skills = cv.skills.split(','). map(s => s.trim());
-                const skillTags = skills.slice(0, 3).map(skill => 
-                    `<span class="skill-tag">${skill}</span>`
-                ). join('');
-                const moreSkills = skills.length > 3 ? ` <span class="skill-tag">+${skills.length - 3}</span>` : '';
+        //         // Parse skills into tags
+        //         const skills = cv.skills.split(','). map(s => s.trim());
+        //         const skillTags = skills.slice(0, 3).map(skill => 
+        //             `<span class="skill-tag">${skill}</span>`
+        //         ). join('');
+        //         const moreSkills = skills.length > 3 ? ` <span class="skill-tag">+${skills.length - 3}</span>` : '';
                 
-                row.innerHTML = `
-                    <td><strong>#${cv.cvId}</strong></td>
-                    <td>
-                        <div class="cv-name">${cv.name}</div>
-                        <div class="cv-email">${cv. email}</div>
-                    </td>
-                    <td><div class="cv-skills">${skillTags}${moreSkills}</div></td>
-                    <td><span class="experience-badge">${cv.experience} years</span></td>
-                    <td>${cv.lastPosition}</td>
-                    <td>${cv.education}</td>
-                    <td>${cv.location}</td>
-                `;
-            });
-        }
+        //         row.innerHTML = `
+        //             <td><strong>#${cv.cvId}</strong></td>
+        //             <td>
+        //                 <div class="cv-name">${cv.name}</div>
+        //                 <div class="cv-email">${cv. email}</div>
+        //             </td>
+        //             <td><div class="cv-skills">${skillTags}${moreSkills}</div></td>
+        //             <td><span class="experience-badge">${cv.experience} years</span></td>
+        //             <td>${cv.lastPosition}</td>
+        //             <td>${cv.education}</td>
+        //             <td>${cv.location}</td>
+        //         `;
+        //     });
+        // }
+
+        // Display CVs in table with scores
+function displayCVs(cvs) {
+    const tbody = document.getElementById('cvBody');
+    
+    // Update count
+    document.getElementById('cvCount').innerHTML = 
+        `<strong>Total CVs: ${allCVs.length}</strong> | Showing: ${cvs.length}`;
+    
+    // Clear table
+    tbody.innerHTML = '';
+    
+    // Check if no data
+    if (cvs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="no-data">No CVs found matching your criteria</td></tr>';
+        return;
+    }
+    
+    // Add rows with ranking
+    cvs.forEach((cv, index) => {
+        const row = tbody.insertRow();
+        
+        // Parse skills into tags
+        const skills = cv. skills.split(',').map(s => s.trim());
+        const skillTags = skills.slice(0, 3).map(skill => 
+            `<span class="skill-tag">${skill}</span>`
+        ).join('');
+        const moreSkills = skills.length > 3 ? ` <span class="skill-tag">+${skills.length - 3}</span>` : '';
+        
+        // Score badge color based on score
+        const scorePercent = (cv.score * 100).toFixed(1);
+        let scoreBadgeColor = '#4caf50'; // Green
+        if (cv.score < 0.7) scoreBadgeColor = '#ff9800'; // Orange
+        if (cv.score < 0.5) scoreBadgeColor = '#f44336'; // Red
+        
+        row.innerHTML = `
+            <td><strong style="font-size: 20px;">#${index + 1}</strong></td>
+            <td>
+                <span style="background:  ${scoreBadgeColor}; color: white; padding: 6px 12px; border-radius: 20px; font-weight: 600;">
+                    ${scorePercent}%
+                </span>
+                <div style="font-size: 11px; color: #666; margin-top: 5px;">
+                    Skills: ${(cv.skillsScore * 100).toFixed(0)}% | 
+                    Exp: ${(cv.experienceScore * 100).toFixed(0)}%
+                </div>
+            </td>
+            <td><strong>#${cv.cvId}</strong></td>
+            <td>
+                <div class="cv-name">${cv.name}</div>
+                <div class="cv-email">${cv.email}</div>
+            </td>
+            <td><div class="cv-skills">${skillTags}${moreSkills}</div></td>
+            <td><span class="experience-badge">${cv.experience} years</span></td>
+            <td>${cv. lastPosition}</td>
+            <td>${cv.education}</td>
+            <td>${cv.location}</td>
+        `;
+    });
+}
+
         
         // Logout function
         async function logout() {

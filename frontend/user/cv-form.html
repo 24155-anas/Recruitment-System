@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit CV - Recruitment System</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles. css">
 </head>
 <body>
     <div class="container">
         <div class="form-container">
             <h2>Submit Your CV</h2>
+            
+            <!-- Manual Form Entry -->
             <form id="cvForm">
                 <input type="text" name="name" placeholder="Full Name" required>
                 <input type="email" name="email" placeholder="Email" required>
@@ -20,65 +22,178 @@
                 <input type="text" name="location" placeholder="Location" required>
                 <button type="submit" class="btn btn-primary">Submit CV</button>
             </form>
-            <p id="msg" class="message"></p>
-        </div>
 
-        <div>
-            <a href="dashboard.html" class="btn btn-secondary">Back to Dashboard</a>
+            <!-- OR Divider -->
+            <div style="text-align: center; margin:  30px 0;">
+                <p style="color: #999;">─── OR ───</p>
+            </div>
+
+            <!-- PDF Upload Section -->
+            <div class="upload-section" style="text-align: center;">
+                <h3>📄 Upload Your CV (PDF)</h3>
+                <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+                    We'll automatically extract your information from the PDF
+                </p>
+                
+                <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: left;">
+                    <strong>⚠️ For best results: </strong>
+                    <ul style="margin: 10px 0 0 20px; font-size: 13px;">
+                        <li>Use a simple, text-based PDF (not scanned)</li>
+                        <li>Include clear sections: Skills, Experience, Education</li>
+                        <li>Make sure your email is visible</li>
+                        <li>Maximum file size: 5MB</li>
+                    </ul>
+                </div>
+                
+                <input type="file" id="pdfFile" accept=".pdf" style="display: none;" onchange="handleFileSelect()">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('pdfFile').click()" 
+                        style="background: #6c757d; margin-bottom:  10px;">
+                    📤 Choose PDF File
+                </button>
+                
+                <div id="fileName" style="color:  #666; margin: 10px 0; font-size: 14px;"></div>
+                <div id="uploadStatus" style="margin-top: 15px;"></div>
+            </div>
+
+            <!-- Back Button -->
+            <div style="margin-top: 30px; text-align: center;">
+                <a href="dashboard.html" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
         </div>
     </div>
 
-    <!-- <script>
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let selectedFile = null;
+
+        // Handle manual form submission
         document.getElementById('cvForm').onsubmit = async (e) => {
             e.preventDefault();
             let data = Object.fromEntries(new FormData(e.target));
+            
             try {
-                let res = await fetch("/submit_cv", {
-                    method: "POST",
+                let res = await fetch(`${API_BASE}/submit_cv`, {
+                    method: 'POST',
                     headers: {"Content-Type": "application/json"},
+                    credentials: 'include',
                     body: JSON.stringify(data)
                 });
+                
                 let r = await res.json();
-                if(r.success) {
-                    document.getElementById('msg').textContent = "CV submitted successfully!";
-                    document.getElementById('msg').className = "message success";
-                    setTimeout(() => window.location = "/dashboard.html", 2000);
+                if (r.success) {
+                    alert("CV submitted successfully!");
+                    window.location = "dashboard. html";
                 } else {
-                    document.getElementById('msg'). textContent = "Error: " + (r.message || "Unknown error");
-                    document.getElementById('msg').className = "message error";
+                    alert("Failed to submit CV: " + (r.message || ""));
                 }
-            } catch(err) {
-                document. getElementById('msg').textContent = "Error: " + err.message;
-                document.getElementById('msg'). className = "message error";
+            } catch (err) {
+                alert("Error: " + err.message);
             }
         };
-    </script> -->
-    <script>
-    const API_BASE = 'http://localhost:8080/api';
-    
-    document.getElementById('cvForm').onsubmit = async (e) => {
-        e.preventDefault();
-        let data = Object.fromEntries(new FormData(e.target));
-        
-        try {
-            let res = await fetch(`${API_BASE}/submit_cv`, {
-                method: 'POST',
-                headers: {"Content-Type": "application/json"},
-                credentials: 'include',
-                body: JSON.stringify(data)
-            });
+
+        // Handle file selection
+        function handleFileSelect() {
+            const fileInput = document.getElementById('pdfFile');
+            const file = fileInput.files[0];
             
-            let r = await res.json();
-            if(r.success) {
-                alert("CV submitted successfully!");
-                window. location = "dashboard.html";
-            } else {
-                alert("Failed to submit CV: " + (r.message || ""));
+            console.log('File selected:', file);  // Debug
+            
+            if (!file) {
+                console.error('No file selected');
+                return;
             }
-        } catch(err) {
-            alert("Error: " + err.message);
+            
+            if (file.type !== 'application/pdf') {
+                alert('Please select a PDF file');
+                fileInput.value = '';
+                return;
+            }
+            
+            if (file. size > 5 * 1024 * 1024) {
+                alert('File too large.  Maximum size: 5MB');
+                fileInput.value = '';
+                return;
+            }
+            
+            selectedFile = file;
+            console.log('selectedFile set:', selectedFile);  // Debug
+            
+            document.getElementById('fileName').innerHTML = 
+                `📄 Selected: <strong>${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB)`;
+            
+            // Auto-upload
+            uploadPDF();
         }
-    };
-</script>
+
+        // Upload PDF function
+        async function uploadPDF() {
+            console.log('uploadPDF called, selectedFile:', selectedFile);  // Debug
+            
+            if (!selectedFile) {
+                console.error('No file selected');
+                alert('Please select a file first');
+                return;
+            }
+            
+            const statusDiv = document.getElementById('uploadStatus');
+            statusDiv.innerHTML = '<p style="color: #667eea;">⏳ Uploading and parsing CV...  Please wait... </p>';
+            
+            try {
+                const formData = new FormData();
+                formData.append('cv', selectedFile);
+                
+                // Debug: Check FormData
+                console.log('FormData created: ');
+                for (let [key, value] of formData.entries()) {
+                    console.log(`  ${key}:`, value);
+                }
+                
+                console.log('Sending request to:', `${API_BASE}/upload_cv`);
+                
+                const response = await fetch(`${API_BASE}/upload_cv`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData
+                    // DON'T set Content-Type - browser does it automatically with boundary
+                });
+                
+                console.log('Response status:', response. status);
+                console.log('Response headers:', [... response.headers]);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (data.success) {
+                    statusDiv.innerHTML = `
+                        <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; text-align: left;">
+                            <strong>✅ CV Uploaded Successfully!</strong><br><br>
+                            <strong>File Information:</strong><br>
+                            📄 Size: ${data.size} bytes<br>
+                            💾 Saved successfully
+                        </div>
+                    `;
+                    
+                    setTimeout(() => {
+                        window.location. href = 'dashboard.html';
+                    }, 2000);
+                } else {
+                    statusDiv.innerHTML = `
+                        <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
+                            <strong>❌ Upload Failed</strong><br>
+                            ${data.message}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                statusDiv.innerHTML = `
+                    <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px;">
+                        <strong>❌ Error</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+    </script>
 </body>
 </html>

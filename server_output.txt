@@ -1,0 +1,23 @@
+
+=== Recruitment System API Server ===
+Current directory: "/home/anas/Desktop/Recruitment-System"
+Initializing databases...
+Created: ../database/user.idx
+Created: ../database/user.dat
+UserDB ready. Next ID: 1
+Created: ../database/cv.idx
+Created: ../database/cv.dat
+CVDB ready. Next ID: 1
+
+=== API Server Started ===
+Running on http://localhost:8080/
+API Endpoints:
+  POST /api/signup
+  POST /api/login
+  POST /api/logout
+  POST /api/submit_cv
+  GET  /api/get_cv
+  GET  /api/cvs/all (Admin only)
+
+Press Ctrl+C to stop
+
