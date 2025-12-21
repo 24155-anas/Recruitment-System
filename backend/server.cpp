@@ -323,6 +323,7 @@
 #include <filesystem>
 #include "PDFParser.hpp"
 
+
 using json = nlohmann::json;
 using namespace httplib;
 using namespace std;
@@ -331,7 +332,6 @@ using namespace std;
 UserDatabase* userdb = nullptr;
 CVDatabase* cvdb = nullptr;
 SessionManager* sessionMgr = nullptr;
-
 // Helper function to check if user is admin
 bool isAdmin(int32_t userId) {
     UserRecord* user = userdb->getUserById(userId);
@@ -709,181 +709,194 @@ int main() {
 //         );
 //     }
 // });
-// --- UPLOAD CV PDF ENDPOINT (Using multipart parser) ---
+// --- UPLOAD CV PDF ENDPOINT (Local parsing only) ---
 svr.Post("/api/upload_cv", [](const Request& req, Response& res) {
-    auto cookie = req.get_header_value("Cookie");
-    int32_t userId = sessionMgr->getUserId(cookie);
-    
-    if (userId == -1) {
-        json response;
-        response["success"] = false;
-        response["message"] = "Not logged in";
-        res.set_content(response.dump(), "application/json");
-        return;
-    }
-    
-    std::cout << "[UPLOAD] User " << userId << std::endl;
-    std::cout << "  Content-Length: " << req.get_header_value("Content-Length") << std::endl;
-    std::cout << "  Content-Type: " << req.get_header_value("Content-Type") << std::endl;
-    
-    // Check if request has files parameter
-    if (req.files.empty() && req.body.empty()) {
-        json response;
-        response["success"] = false;
-        response["message"] = "No file data received.  Both req.files and req.body are empty. ";
-        res.set_content(response.dump(), "application/json");
-        return;
-    }
-    
-    std::string pdfContent;
-    std::string filename;
-    
-    // Try req.files first (newer httplib)
-    if (!req.files.empty()) {
-        std::cout << "  Using req.files (newer httplib)" << std::endl;
+    try {
+        auto cookie = req.get_header_value("Cookie");
+        int32_t userId = sessionMgr->getUserId(cookie);
         
-        auto it = req.files.find("cv");
-        if (it == req.files.end()) {
+        if (userId == -1) {
             json response;
             response["success"] = false;
-            response["message"] = "No 'cv' file field found";
+            response["message"] = "Not logged in";
             res.set_content(response.dump(), "application/json");
             return;
         }
         
-        pdfContent = it->second.content;
-        filename = it->second.filename;
+        std::cout << "[UPLOAD] User " << userId << std:: endl;
         
-    } else if (!req.body.empty()) {
-        // Fallback to manual parsing (older httplib)
-        std::cout << "  Using req.body manual parsing (older httplib)" << std::endl;
-        std::cout << "  Body size: " << req.body.length() << std::endl;
+        std:: string pdfContent;
+        std::string filename;
         
-        std::string contentType = req.get_header_value("Content-Type");
-        size_t boundaryPos = contentType.find("boundary=");
-        
-        if (boundaryPos == std::string::npos) {
-            json response;
-            response["success"] = false;
-            response["message"] = "No boundary in Content-Type";
-            res.set_content(response.dump(), "application/json");
-            return;
-        }
-        
-        std::string boundary = "--" + contentType.substr(boundaryPos + 9);
-        const std::string& body = req. body;
-        
-        // Find cv field
-        size_t cvPos = body.find("name=\"cv\"");
-        if (cvPos == std::string::npos) {
-            json response;
-            response["success"] = false;
-            response["message"] = "No 'cv' field in multipart data";
-            res.set_content(response.dump(), "application/json");
-            return;
-        }
-        
-        // Find filename
-        size_t filenamePos = body.find("filename=\"", cvPos);
-        if (filenamePos != std::string::npos && filenamePos < cvPos + 200) {
-            size_t filenameStart = filenamePos + 10;
-            size_t filenameEnd = body.find("\"", filenameStart);
-            if (filenameEnd != std::string::npos) {
-                filename = body.substr(filenameStart, filenameEnd - filenameStart);
+        // Get file from req.files
+        if (!req. files.empty()) {
+            std::cout << "  Using req. files (newer httplib)" << std::endl;
+            
+            auto it = req.files.find("cv");
+            if (it == req.files.end()) {
+                json response;
+                response["success"] = false;
+                response["message"] = "No 'cv' file field found";
+                res.set_content(response. dump(), "application/json");
+                return;
             }
-        }
-        
-        // Find data start
-        size_t dataStart = body.find("\r\n\r\n", cvPos);
-        if (dataStart != std::string::npos) {
-            dataStart += 4;
+            
+            pdfContent = it->second.content;
+            filename = it->second.filename;
+            
         } else {
-            dataStart = body.find("\n\n", cvPos);
-            if (dataStart != std::string::npos) dataStart += 2;
-        }
-        
-        if (dataStart == std:: string::npos) {
             json response;
             response["success"] = false;
-            response["message"] = "Cannot find data start in multipart";
+            response["message"] = "No file data";
             res.set_content(response.dump(), "application/json");
             return;
         }
         
-        // Find data end
-        size_t dataEnd = body.find("\r\n" + boundary, dataStart);
-        if (dataEnd == std::string::npos) {
-            dataEnd = body.find("\n" + boundary, dataStart);
-        }
+        std::cout << "  PDF size: " << pdfContent.length() << " bytes" << std::endl;
+        std::cout << "  Filename:  " << filename << std::endl;
         
-        if (dataEnd == std::string::npos) {
+        // Validate PDF
+        if (pdfContent. length() < 4 || pdfContent.substr(0, 4) != "%PDF") {
             json response;
             response["success"] = false;
-            response["message"] = "Cannot find data end in multipart";
+            response["message"] = "Invalid PDF file";
             res.set_content(response.dump(), "application/json");
             return;
         }
         
-        // Extract PDF
-        pdfContent = body.substr(dataStart, dataEnd - dataStart);
-    } else {
-        json response;
-        response["success"] = false;
-        response["message"] = "No file data - both req.files and req.body are empty";
-        res.set_content(response.dump(), "application/json");
-        return;
-    }
-    
-    std:: cout << "  PDF size: " << pdfContent.length() << " bytes" << std:: endl;
-    std::cout << "  Filename: " << filename << std::endl;
-    
-    // Validate PDF
-    if (pdfContent.length() < 4 || pdfContent.substr(0, 4) != "%PDF") {
-        std::cout << "  ERROR: Not a valid PDF.  First 20 bytes:" << std::endl << "    ";
-        for (size_t i = 0; i < 20 && i < pdfContent.length(); i++) {
-            printf("%02X ", (unsigned char)pdfContent[i]);
-        }
-        std:: cout << std::endl;
+        // Save temporarily
+        std::string tempPath = "uploads/cv_" + std::to_string(userId) + "_" + 
+                               std::to_string(time(nullptr)) + ".pdf";
         
+        std::filesystem::create_directories("uploads");
+        
+        std::ofstream ofs(tempPath, std::ios::binary);
+        if (!ofs) {
+            json response;
+            response["success"] = false;
+            response["message"] = "Cannot create temp file";
+            res.set_content(response.dump(), "application/json");
+            return;
+        }
+        
+        ofs. write(pdfContent.c_str(), pdfContent.length());
+        ofs.close();
+        
+        std::cout << "  ✓ Saved:  " << tempPath << std::endl;
+        
+        // ========== PARSE PDF ==========
+        std::cout << "  Parsing PDF..." << std::endl;
+        
+        ParsedCV parsed;
+        try {
+            parsed = parseCV(tempPath);
+        } catch (std::exception& e) {
+            std::cerr << "  ✗ Parse exception: " << e.what() << std::endl;
+            std::remove(tempPath.c_str());
+            json response;
+            response["success"] = false;
+            response["message"] = std::string("Parse error: ") + e.what();
+            res.set_content(response.dump(), "application/json");
+            return;
+        }
+        
+        // Clean up temp file
+        std:: remove(tempPath.c_str());
+        
+        if (! parsed.success) {
+            std::cout << "  ✗ Parse failed:  " << parsed.errorMessage << std::endl;
+            json response;
+            response["success"] = false;
+            response["message"] = "Failed to parse PDF: " + parsed.errorMessage;
+            res.set_content(response.dump(), "application/json");
+            return;
+        }
+        
+        std::cout << "  ✓ Parsed successfully:" << std::endl;
+        std:: cout << "    Name:  '" << parsed.name << "'" << std::endl;
+        std::cout << "    Email:  '" << parsed.email << "'" << std::endl;
+        std::cout << "    Skills:  '" << parsed.skills << "'" << std::endl;
+        std::cout << "    Experience:  " << parsed.experience << " years" << std::endl;
+        std::cout << "    Position:  '" << parsed.lastPosition << "'" << std::endl;
+        std::cout << "    Education: '" << parsed.education << "'" << std::endl;
+        std::cout << "    Location: '" << parsed.location << "'" << std::endl;
+        
+        // ========== SAVE TO DATABASE ==========
+        std::cout << "  Saving to database..." << std::endl;
+        
+        int32_t cvId = 0;
+        try {
+            cvId = cvdb->addCV(
+                userId,
+                parsed.name,
+                parsed.email,
+                parsed. skills,
+                parsed.experience,
+                parsed.lastPosition,
+                parsed.education,
+                parsed.location
+            );
+        } catch (std::exception& e) {
+            std::cerr << "  ✗ Database exception: " << e.what() << std::endl;
+            json response;
+            response["success"] = false;
+            response["message"] = std::string("Database error:  ") + e.what();
+            res.set_content(response.dump(), "application/json");
+            return;
+        }
+        
+        if (cvId <= 0) {
+            std:: cout << "  ✗ Database save failed (returned ID: " << cvId << ")" << std::endl;
+            json response;
+            response["success"] = false;
+            response["message"] = "Failed to save CV to database";
+            res.set_content(response.dump(), "application/json");
+            return;
+        }
+        
+        std::cout << "  ✓ Saved to database with CV ID: " << cvId << std::endl;
+        
+        // Return success with parsed data
         json response;
-        response["success"] = false;
-        response["message"] = "Invalid PDF file - missing PDF header";
+        response["success"] = true;
+        response["message"] = "CV uploaded and parsed successfully";
+        response["cvId"] = cvId;
+        
+        json parsedData;
+        parsedData["name"] = parsed.name;
+        parsedData["email"] = parsed.email;
+        parsedData["skills"] = parsed.skills;
+        parsedData["experience"] = parsed.experience;
+        parsedData["lastPosition"] = parsed.lastPosition;
+        parsedData["education"] = parsed.education;
+        parsedData["location"] = parsed.location;
+        
+        response["parsed"] = parsedData;
+        
         res.set_content(response.dump(), "application/json");
-        return;
+        
+        std::cout << "[UPLOAD] ✓ Complete success!" << std::endl;
+        
+    } catch (std::exception& e) {
+        std::cerr << "[UPLOAD ERROR] Unhandled exception: " << e.what() << std::endl;
+        
+        try {
+            json response;
+            response["success"] = false;
+            response["message"] = std::string("Server error: ") + e.what();
+            res.set_content(response.dump(), "application/json");
+        } catch (...) {
+            res.set_content("{\"success\": false,\"message\":\"Fatal server error\"}", "application/json");
+        }
+        res.status = 500;
+    } catch (...) {
+        std::cerr << "[UPLOAD ERROR] Unknown exception" << std::endl;
+        res.set_content("{\"success\":false,\"message\": \"Unknown server error\"}", "application/json");
+        res.status = 500;
     }
-    
-    // Save file
-    std::string tempPath = "uploads/cv_" + std::to_string(userId) + "_" + 
-                           std::to_string(time(nullptr)) + ".pdf";
-    
-    std:: filesystem::create_directories("uploads");
-    
-    std::ofstream ofs(tempPath, std:: ios::binary);
-    if (!ofs) {
-        json response;
-        response["success"] = false;
-        response["message"] = "Cannot create file on server";
-        res.set_content(response.dump(), "application/json");
-        return;
-    }
-    
-    ofs. write(pdfContent.c_str(), pdfContent.length());
-    ofs.close();
-    
-    std::cout << "  ✓ Saved:  " << tempPath << std::endl;
-    
-    // Return success
-    json response;
-    response["success"] = true;
-    response["message"] = "PDF uploaded successfully";
-    response["filename"] = filename. empty() ? "uploaded.pdf" : filename;
-    response["size"] = pdfContent.length();
-    response["path"] = tempPath;
-    
-    res.set_content(response.dump(), "application/json");
-    
-    std::cout << "[UPLOAD] ✓ Success!" << std::endl;
 });
+
+
 
     // // --- GET ALL CVs ENDPOINT (Admin only) ---
     // svr.Get("/api/cvs/all", [](const Request& req, Response& res) {
@@ -1040,6 +1053,68 @@ svr.Post("/api/upload_cv", [](const Request& req, Response& res) {
         }
     });
 
+
+    //deletion
+        // --- DELETE CV ENDPOINT (Admin only) ---
+    svr.Delete("/api/cv/:id", [](const Request& req, Response& res) {
+        try {
+            auto cookie = req.get_header_value("Cookie");
+            int32_t userId = sessionMgr->getUserId(cookie);
+            
+            // Check if logged in
+            if (userId == -1) {
+                res.set_content(
+                    json({{"success", false}, {"message", "Not logged in"}}).dump(),
+                    "application/json"
+                );
+                res.status = 401;
+                return;
+            }
+            
+            // Check if admin
+            if (!isAdmin(userId)) {
+                res.set_content(
+                    json({{"success", false}, {"message", "Unauthorized - Admin access required"}}).dump(),
+                    "application/json"
+                );
+                res.status = 403;
+                std::cout << "[DELETE CV] ✗ Unauthorized attempt by User ID: " << userId << std:: endl;
+                return;
+            }
+            
+            // Get CV ID from URL parameter
+            std::string cvIdStr = req.path_params.at("id");
+            int32_t cvId = std::stoi(cvIdStr);
+            
+            std::cout << "[DELETE CV] Admin (User " << userId << ") deleting CV " << cvId << std::endl;
+            
+            // Delete the CV
+            bool deleted = cvdb->deleteCV(cvId);
+            
+            if (deleted) {
+                res.set_content(
+                    json({{"success", true}, {"message", "CV deleted successfully"}, {"cvId", cvId}}).dump(),
+                    "application/json"
+                );
+                std::cout << "[DELETE CV] ✓ CV " << cvId << " deleted by admin" << std::endl;
+            } else {
+                res. set_content(
+                    json({{"success", false}, {"message", "CV not found or already deleted"}}).dump(),
+                    "application/json"
+                );
+                res.status = 404;
+                std::cout << "[DELETE CV] ✗ CV " << cvId << " not found" << std::endl;
+            }
+            
+        } catch (std::exception& e) {
+            std::cerr << "[DELETE CV ERROR] " << e.what() << std::endl;
+            res.set_content(
+                json({{"success", false}, {"message", "Server error"}}).dump(),
+                "application/json"
+            );
+            res.status = 500;
+        }
+    });
 
 
 

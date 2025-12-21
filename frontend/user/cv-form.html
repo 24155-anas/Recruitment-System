@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Submit CV - Recruitment System</title>
-    <link rel="stylesheet" href="styles. css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
@@ -82,7 +82,7 @@
                 let r = await res.json();
                 if (r.success) {
                     alert("CV submitted successfully!");
-                    window.location = "dashboard. html";
+                    window.location = "dashboard.html";
                 } else {
                     alert("Failed to submit CV: " + (r.message || ""));
                 }

@@ -25,7 +25,7 @@ private:
 
     std::string extractSessionId(const std::string& cookieHeader) {
         // Parse Cookie header: "SESSIONID=abc123def456..."
-        size_t pos = cookieHeader. find("SESSIONID=");
+        size_t pos = cookieHeader.find("SESSIONID=");
         if (pos != std::string::npos) {
             return cookieHeader.substr(pos + 10, 32);
         }
