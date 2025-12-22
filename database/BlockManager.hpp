@@ -84,7 +84,7 @@ class BlockManager {
 private:
     std::fstream file;
     std::string filename;
-    FileHeader header;
+    FileHeader header; //hr file ka header
     
     //read an entire block
     void readBlock(int32_t blockNum, char* buffer) {

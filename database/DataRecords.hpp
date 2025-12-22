@@ -12,7 +12,7 @@ struct UserRecord {
     char passwordHash[65];
     char email[100];
     int64_t timestamp;
-    bool isDeleted;  // Soft delete flag
+    bool isDeleted;  //sof flag
     
     UserRecord() : userId(-1), timestamp(0), isDeleted(false) {
         memset(username, 0, sizeof(username));
@@ -73,6 +73,16 @@ struct CVRecord {
         std::cout << "Location: " << location << std::endl;
         std::cout << "---" << std::endl;
     }
+
+    bool operator<(const CVRecord& other) const {
+    return cvId < other.cvId;
+}
+    bool operator>(const CVRecord& other) const {
+        return cvId > other.cvId;
+    }
+    bool operator==(const CVRecord& other) const {
+        return cvId == other.cvId;
+    }
 };
 
 //data BLOCK header
@@ -83,9 +93,7 @@ struct DataBlockHeader {
     int32_t freeSpace;
     int32_t nextBlock;  // For chaining
     
-    DataBlockHeader() : blockNumber(-1), recordCount(0), 
-                       freeSpace(BLOCK_SIZE - sizeof(DataBlockHeader)), 
-                       nextBlock(-1) {}
+    DataBlockHeader() : blockNumber(-1), recordCount(0), freeSpace(BLOCK_SIZE - sizeof(DataBlockHeader)), nextBlock(-1) {}
     
     static size_t size() { return sizeof(DataBlockHeader); }
 };
@@ -141,7 +149,7 @@ struct CompanyRecord {
     }
 };
 
-// Application Record - Links a CV to a Company
+// Application Record /links cv to company
 struct ApplicationRecord {
     int32_t applicationId;
     int32_t userId;
