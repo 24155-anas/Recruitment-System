@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Applications</title>
+    <style>
+        * {
+            margin: 0;
+            padding:  0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius:  10px;
+            margin-bottom: 30px;
+            box-shadow:  0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            color:  #667eea;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border:  none;
+            border-radius:  5px;
+            cursor:  pointer;
+            font-size:  14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-logout {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-logout:hover {
+            background: #d32f2f;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin:  0 auto;
+        }
+        
+        .stats {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow:  0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+        
+        .stat-item {
+            flex: 1;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight:  bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .applications-container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .application-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        
+        .application-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        
+        .company-info h3 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom:  5px;
+        }
+        
+        .job-title {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-reviewed {
+            background: #cce5ff;
+            color:  #004085;
+        }
+        
+        .status-accepted {
+            background: #d4edda;
+            color:  #155724;
+        }
+        
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .app-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top:  15px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .detail-item span {
+            margin-left: 8px;
+        }
+        
+        .match-score {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .score-bar {
+            flex: 1;
+            height:  10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin:  0 15px;
+        }
+        
+        .score-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.5s;
+        }
+        
+        .score-excellent {
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+        }
+        
+        .score-good {
+            background: linear-gradient(90deg, #2196f3, #03a9f4);
+        }
+        
+        .score-average {
+            background: linear-gradient(90deg, #ff9800, #ffc107);
+        }
+        
+        .score-poor {
+            background: linear-gradient(90deg, #f44336, #e91e63);
+        }
+        
+        .no-applications {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>📋 My Applications</h1>
+            <p>Track your job applications</p>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" onclick="window. location.href='dashboard.html'">
+                ← Back to Jobs
+            </button>
+            <button class="btn btn-logout" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-item">
+                <div class="stat-number" id="totalApps">0</div>
+                <div class="stat-label">Total Applications</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="pendingApps">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="acceptedApps">0</div>
+                <div class="stat-label">Accepted</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="rejectedApps">0</div>
+                <div class="stat-label">Rejected</div>
+            </div>
+        </div>
+
+        <div class="applications-container">
+            <div id="applicationsContent" class="loading">
+                ⏳ Loading your applications...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+
+        window.addEventListener('DOMContentLoaded', loadApplications);
+
+        async function loadApplications() {
+            try {
+                const response = await fetch(`${API_BASE}/my-applications`, {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch applications');
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayApplications(data.applications);
+                    updateStats(data.applications);
+                } else {
+                    throw new Error(data.message);
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('applicationsContent').innerHTML = 
+                    '<div class="no-applications">❌ Failed to load applications</div>';
+            }
+        }
+
+        function displayApplications(applications) {
+            const container = document.getElementById('applicationsContent');
+
+            if (applications.length === 0) {
+                container.innerHTML = `
+                    <div class="no-applications">
+                        <h2>No Applications Yet</h2>
+                        <p>You haven't applied to any jobs yet. </p>
+                        <button class="btn btn-secondary" onclick="window.location.href='dashboard.html'" style="margin-top: 20px;">
+                            Browse Jobs
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            applications.forEach(app => {
+                const card = createApplicationCard(app);
+                container.appendChild(card);
+            });
+        }
+
+        function createApplicationCard(app) {
+            const card = document.createElement('div');
+            card.className = 'application-card';
+
+            // Format date
+            const appliedDate = new Date(app. appliedDate * 1000);
+            const formattedDate = appliedDate. toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Determine score class
+            let scoreClass = 'score-poor';
+            if (app.matchScore >= 80) scoreClass = 'score-excellent';
+            else if (app.matchScore >= 60) scoreClass = 'score-good';
+            else if (app.matchScore >= 40) scoreClass = 'score-average';
+
+            // Status emoji
+            const statusEmoji = {
+                'pending': '⏳',
+                'reviewed': '👀',
+                'accepted': '✅',
+                'rejected':  '❌'
+            };
+
+            card.innerHTML = `
+                <div class="app-header">
+                    <div class="company-info">
+                        <h3>🏢 ${app.companyName}</h3>
+                        <div class="job-title">${app.jobTitle}</div>
+                    </div>
+                    <div class="status-badge status-${app.status}">
+                        ${statusEmoji[app.status] || '❓'} ${app.status. toUpperCase()}
+                    </div>
+                </div>
+
+                <div class="app-details">
+                    <div class="detail-item">
+                        📍 <span><strong>Location:</strong> ${app.location}</span>
+                    </div>
+                    <div class="detail-item">
+                        💰 <span><strong>Salary:</strong> $${app. salary}/month</span>
+                    </div>
+                    <div class="detail-item">
+                        📅 <span><strong>Applied: </strong> ${formattedDate}</span>
+                    </div>
+                </div>
+
+                <div class="match-score">
+                    <strong>Match Score:</strong>
+                    <div class="score-bar">
+                        <div class="score-fill ${scoreClass}" style="width: ${app.matchScore}%"></div>
+                    </div>
+                    <strong>${app.matchScore. toFixed(1)}%</strong>
+                </div>
+            `;
+
+            return card;
+        }
+
+        function updateStats(applications) {
+            const stats = {
+                total: applications.length,
+                pending: 0,
+                accepted: 0,
+                rejected: 0
+            };
+
+            applications.forEach(app => {
+                if (app.status === 'pending') stats.pending++;
+                else if (app.status === 'accepted') stats.accepted++;
+                else if (app.status === 'rejected') stats.rejected++;
+            });
+
+            document.getElementById('totalApps').textContent = stats. total;
+            document.getElementById('pendingApps').textContent = stats.pending;
+            document. getElementById('acceptedApps').textContent = stats.accepted;
+            document.getElementById('rejectedApps').textContent = stats.rejected;
+
+            document.getElementById('stats').style.display = 'flex';
+        }
+
+        async function logout() {
+            try {
+                await fetch(`${API_BASE}/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+            
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

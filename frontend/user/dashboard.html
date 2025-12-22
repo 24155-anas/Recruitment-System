@@ -3,102 +3,373 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Recruitment System</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Available Jobs - Recruitment System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius:  10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            color:  #667eea;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background:  #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-logout {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-logout:hover {
+            background: #d32f2f;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin:  0 auto;
+        }
+        
+        .jobs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .job-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow:  0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .job-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.2);
+        }
+        
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .job-title {
+            font-size: 18px;
+            color: #333;
+            margin-bottom:  15px;
+        }
+        
+        .job-details {
+            margin-bottom: 15px;
+        }
+        
+        .detail-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .detail-row span {
+            margin-left: 8px;
+        }
+        
+        .skills-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .skill-tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 10px;
+            border-radius:  15px;
+            font-size:  12px;
+        }
+        
+        .salary-badge {
+            background: #4caf50;
+            color:  white;
+            padding: 8px 15px;
+            border-radius:  20px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        
+        .btn-apply {
+            width: 100%;
+            padding:  12px;
+            background:  linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight:  600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn-apply:hover {
+            transform: scale(1.05);
+        }
+        
+        .btn-apply:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .no-jobs {
+            text-align: center;
+            background: white;
+            padding: 60px;
+            border-radius: 10px;
+            color: #999;
+        }
+        
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 20px;
+            padding: 60px;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom:  20px;
+            display: none;
+        }
+        
+        .alert.show {
+            display: block;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color:  #155724;
+            border:  1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="dashboard">
-            <h2>Welcome to Your Dashboard</h2>
-            <p>Manage your CV and profile here</p>
-            
-            <div class="nav-buttons">
-                <a href="cv-form.html" class="btn btn-primary">Submit or Edit CV</a>
-            </div>
-
-            <div class="user-info">
-                <h3>Your CVs</h3>
-                <div id="cvList">Loading... </div>
-            </div>
-
-            <form id="logoutForm">
-                <button type="submit" class="btn btn-danger">Logout</button>
-            </form>
+    <div class="header">
+        <div>
+            <h1>🚀 Available Jobs</h1>
+            <p>Find your dream job</p>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" onclick="window.location.href='my-applications.html'">
+                📋 My Applications
+            </button>
+            <button class="btn btn-logout" onclick="logout()">Logout</button>
         </div>
     </div>
 
-    <!-- <script>
-        // Load user's CV on dashboard load
-        async function loadCV() {
-            try {
-                let res = await fetch("/get_cv", {method: "GET"});
-                let r = await res.json();
-                if(r.success && r.cv) {
-                    document.getElementById('cvList').innerHTML = `
-                        <div class="cv-item">
-                            <p><strong>Name:</strong> ${r.cv.name}</p>
-                            <p><strong>Email:</strong> ${r.cv.email}</p>
-                            <p><strong>Skills:</strong> ${r.cv.skills}</p>
-                            <p><strong>Experience:</strong> ${r.cv.experience} years</p>
-                            <p><strong>Last Position:</strong> ${r.cv.lastPosition}</p>
-                            <p><strong>Education:</strong> ${r.cv.education}</p>
-                            <p><strong>Location:</strong> ${r.cv. location}</p>
-                        </div>
-                    `;
-                } else {
-                    document.getElementById('cvList').innerHTML = "<p>No CV submitted yet.  <a href='cv-form. html'>Submit one now!</a></p>";
-                }
-            } catch(err) {
-                document.getElementById('cvList').innerHTML = "<p>Error loading CV: " + err.message + "</p>";
-            }
-        }
-
-        loadCV();
-
-        // LOGOUT
-        document.getElementById('logoutForm').onsubmit = async (e) => {
-            e.preventDefault();
-            try {
-                let res = await fetch("/logout", {method: "POST"});
-                let r = await res.json();
-                if(r.success) {
-                    window.location = "/index.html";
-                }
-            } catch(err) {
-                alert("Logout error: " + err.message);
-            }
-        };
-    </script> -->
+    <div class="container">
+        <div id="alert" class="alert"></div>
+        
+        <div id="jobsContainer">
+            <div class="loading">⏳ Loading jobs...</div>
+        </div>
+    </div>
 
     <script>
-    const API_BASE = 'http://localhost:8080/api';
-    
-    window.onload = async () => {
-        try {
-            let res = await fetch(`${API_BASE}/get_cv`, {
-                credentials: 'include'
-            });
-            
-            let data = await res.json();
-            
-            if (data.success && data.cv) {
-                // Display CV data
-                document.getElementById('cvData').innerHTML = `
-                    <p><strong>Name:</strong> ${data.cv.name}</p>
-                    <p><strong>Email:</strong> ${data.cv.email}</p>
-                    <p><strong>Skills:</strong> ${data.cv. skills}</p>
-                    <p><strong>Experience:</strong> ${data.cv.experience} years</p>
-                    <p><strong>Last Position:</strong> ${data.cv. lastPosition}</p>
-                    <p><strong>Education:</strong> ${data.cv.education}</p>
-                    <p><strong>Location:</strong> ${data.cv.location}</p>
-                `;
-            } else {
-                document.getElementById('cvData').innerHTML = "No CV found.  Please submit one.";
+        const API_BASE = 'http://localhost:8080/api';
+
+        // Load jobs on page load
+        window.addEventListener('DOMContentLoaded', loadJobs);
+
+        async function loadJobs() {
+            try {
+                const response = await fetch(`${API_BASE}/companies/active`, {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch jobs');
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayJobs(data.companies);
+                } else {
+                    showAlert('Failed to load jobs:  ' + data.message, 'error');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('jobsContainer').innerHTML = 
+                    '<div class="no-jobs">❌ Failed to load jobs. Please try again later.</div>';
             }
-        } catch(err) {
-            document.getElementById('cvData').innerHTML = "Error loading CV: " + err.message;
         }
-    };
-</script>
+
+        function displayJobs(companies) {
+            const container = document.getElementById('jobsContainer');
+
+            if (companies.length === 0) {
+                container.innerHTML = '<div class="no-jobs">No jobs available at the moment.  Check back later!</div>';
+                return;
+            }
+
+            const grid = document.createElement('div');
+            grid.className = 'jobs-grid';
+
+            companies.forEach(company => {
+                const card = createJobCard(company);
+                grid.appendChild(card);
+            });
+
+            container.innerHTML = '';
+            container.appendChild(grid);
+        }
+
+        function createJobCard(company) {
+            const card = document.createElement('div');
+            card.className = 'job-card';
+
+            // Parse skills
+            const skills = company.requiredSkills.split(',').map(s => s.trim()).slice(0, 5);
+            const skillsHTML = skills.map(skill => 
+                `<span class="skill-tag">${skill}</span>`
+            ).join('');
+
+            // Format date
+            const postedDate = new Date(company. postedDate * 1000);
+            const daysAgo = Math.floor((Date.now() - postedDate) / (1000 * 60 * 60 * 24));
+
+            card.innerHTML = `
+                <div class="company-name">${company.companyName}</div>
+                <div class="job-title">${company.jobTitle}</div>
+                
+                <div class="salary-badge">💰 $${company.salary}/month</div>
+                
+                <div class="job-details">
+                    <div class="detail-row">
+                        📍 <span><strong>Location:</strong> ${company.location}</span>
+                    </div>
+                    <div class="detail-row">
+                        💼 <span><strong>Position:</strong> ${company.position}</span>
+                    </div>
+                    <div class="detail-row">
+                        📅 <span><strong>Experience:</strong> ${company.minExperience}+ years</span>
+                    </div>
+                    <div class="detail-row">
+                        🎓 <span><strong>Education:</strong> ${company.education}</span>
+                    </div>
+                    <div class="detail-row">
+                        🕒 <span>Posted ${daysAgo} days ago</span>
+                    </div>
+                </div>
+                
+                <div><strong>Required Skills:</strong></div>
+                <div class="skills-tags">${skillsHTML}</div>
+                
+                <div style="color: #666; font-size:  14px; margin-bottom: 15px;">
+                    ${company.description}
+                </div>
+                
+                <button class="btn-apply" onclick="applyToJob(${company.companyId}, '${company.companyName}')">
+                    ✅ Apply Now
+                </button>
+            `;
+
+            return card;
+        }
+
+        function applyToJob(companyId, companyName) {
+            // Store company info in localStorage and redirect to apply page
+            localStorage.setItem('applyCompanyId', companyId);
+            localStorage.setItem('applyCompanyName', companyName);
+            window.location.href = 'apply.html';
+        }
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type} show`;
+            
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 5000);
+        }
+
+        async function logout() {
+            try {
+                await fetch(`${API_BASE}/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+            
+            window.location. href = 'index.html';
+        }
+    </script>
 </body>
 </html>

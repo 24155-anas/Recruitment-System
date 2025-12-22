@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Companies Management - Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding:  0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius:  10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight:  600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .btn-logout {
+            background: #f44336;
+            color: white;
+            margin-left: 10px;
+        }
+        
+        .btn-logout:hover {
+            background: #d32f2f;
+        }
+        
+        .tabs {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            gap:  10px;
+            overflow-x: auto;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            position: relative;
+        }
+        
+        .tab:hover {
+            border-color: #667eea;
+            background: #f5f7fa;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .tab-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #f44336;
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size:  12px;
+            font-weight: bold;
+        }
+        
+        .content-container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow:  0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .company-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom:  2px solid #e0e0e0;
+        }
+        
+        .company-title h2 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .company-meta {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: #f5f7fa;
+        }
+        
+        th {
+            padding: 15px;
+            text-align:  left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom:  1px solid #f0f0f0;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .rank-badge {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius:  15px;
+            font-weight: bold;
+        }
+        
+        .score-badge {
+            padding: 5px 12px;
+            border-radius:  15px;
+            font-weight:  bold;
+        }
+        
+        .score-high {
+            background: #d4edda;
+            color:  #155724;
+        }
+        
+        .score-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .score-low {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-accepted {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 5px;
+            transition: all 0.3s;
+        }
+        
+        .btn-accept {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .btn-accept:hover {
+            background: #45a049;
+        }
+        
+        .btn-reject {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-reject:hover {
+            background:  #da190b;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div>
+                <h1>🏢 Companies Management</h1>
+                <p>View and manage job applications by company</p>
+            </div>
+            <div>
+                <button class="btn btn-primary" onclick="window.location.href='add-company.html'">
+                    ➕ Add New Job
+                </button>
+                <button class="btn btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tabs" id="companyTabs">
+        <div class="loading">⏳ Loading companies...</div>
+    </div>
+
+    <div class="content-container">
+        <div id="applicantsContent" class="loading">
+            Select a company to view applicants
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let companies = [];
+        let selectedCompanyId = null;
+
+        window. addEventListener('DOMContentLoaded', loadCompanies);
+
+        async function loadCompanies() {
+            try {
+                const response = await fetch(`${API_BASE}/companies/all`, {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch companies');
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    companies = data.companies;
+                    displayCompanyTabs(companies);
+                    
+                    if (companies.length > 0) {
+                        selectCompany(companies[0].companyId);
+                    }
+                } else {
+                    throw new Error(data.message);
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                document. getElementById('companyTabs').innerHTML = 
+                    '<div class="no-data">❌ Failed to load companies</div>';
+            }
+        }
+
+        function displayCompanyTabs(companies) {
+            const tabsContainer = document.getElementById('companyTabs');
+
+            if (companies.length === 0) {
+                tabsContainer.innerHTML = '<div class="no-data">No companies found</div>';
+                return;
+            }
+
+            tabsContainer.innerHTML = '';
+
+            companies.forEach(company => {
+                const tab = document.createElement('div');
+                tab.className = 'tab';
+                tab. onclick = () => selectCompany(company.companyId);
+                tab.innerHTML = `
+                    ${company.companyName}
+                    ${company.applicationCount > 0 ? `<span class="tab-badge">${company.applicationCount}</span>` : ''}
+                `;
+                tabsContainer.appendChild(tab);
+            });
+        }
+
+        async function selectCompany(companyId) {
+            selectedCompanyId = companyId;
+
+            // Update active tab
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach((tab, index) => {
+                if (companies[index].companyId === companyId) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+
+            // Load applicants
+            await loadApplicants(companyId);
+        }
+
+        async function loadApplicants(companyId) {
+            const container = document.getElementById('applicantsContent');
+            container.innerHTML = '<div class="loading">⏳ Loading applicants...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/company/${companyId}/applications`, {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch applicants');
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayApplicants(data.company, data.applications);
+                } else {
+                    throw new Error(data.message);
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                container.innerHTML = '<div class="no-data">❌ Failed to load applicants</div>';
+            }
+        }
+
+        function displayApplicants(company, applications) {
+            const container = document.getElementById('applicantsContent');
+
+            let html = `
+                <div class="company-header">
+                    <div class="company-title">
+                        <h2>${company.companyName} - ${company.jobTitle}</h2>
+                        <div class="company-meta">
+                            Required Skills: ${company.requiredSkills} | 
+                            Min Experience: ${company.minExperience} years |
+                            Total Applications: ${applications.length}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (applications.length === 0) {
+                html += '<div class="no-data">No applications yet for this company</div>';
+            } else {
+                html += `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Candidate</th>
+                                <th>Skills</th>
+                                <th>Experience</th>
+                                <th>Match Score</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                applications.forEach(app => {
+                    const scoreClass = app.matchScore >= 80 ? 'score-high' : 
+                                      app.matchScore >= 60 ? 'score-medium' :  'score-low';
+
+                    html += `
+                        <tr>
+                            <td><span class="rank-badge">#${app.rank}</span></td>
+                            <td>
+                                <strong>${app.name}</strong><br>
+                                <small style="color: #666;">${app.email}</small>
+                            </td>
+                            <td style="max-width: 200px;">${app.skills.substring(0, 50)}${app.skills.length > 50 ? '...' : ''}</td>
+                            <td>${app.experience} years</td>
+                            <td><span class="score-badge ${scoreClass}">${app.matchScore. toFixed(1)}%</span></td>
+                            <td><span class="status-badge status-${app.status}">${app.status. toUpperCase()}</span></td>
+                            <td>
+                                ${app.status === 'pending' ? `
+                                    <button class="action-btn btn-accept" onclick="updateStatus(${app.applicationId}, 'accepted')">✓ Accept</button>
+                                    <button class="action-btn btn-reject" onclick="updateStatus(${app.applicationId}, 'rejected')">✗ Reject</button>
+                                ` : `
+                                    <button class="action-btn btn-accept" onclick="updateStatus(${app.applicationId}, 'pending')" style="background: #2196f3;">↻ Reset</button>
+                                `}
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                html += `
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        async function updateStatus(applicationId, newStatus) {
+            try {
+                const response = await fetch(`${API_BASE}/application/${applicationId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Reload applicants
+                    await loadApplicants(selectedCompanyId);
+                } else {
+                    alert('Failed to update status:  ' + data.message);
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error updating status');
+            }
+        }
+
+        async function logout() {
+            try {
+                await fetch(`${API_BASE}/logout`, {
+                    method: 'POST',
+                    credentials:  'include'
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+            
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

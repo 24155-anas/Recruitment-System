@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Job - Admin</title>
+    <style>
+        * {
+            margin:  0;
+            padding: 0;
+            box-sizing:  border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 40px;
+            max-width:  700px;
+            width: 100%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom:  20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius:  5px;
+            font-size:  14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border:  none;
+            border-radius:  5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert.show {
+            display: block;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border:  1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>➕ Post New Job</h1>
+
+        <div id="alert" class="alert"></div>
+
+        <form id="companyForm">
+            <div class="form-group">
+                <label for="companyName">Company Name *</label>
+                <input type="text" id="companyName" required placeholder="e.g., Google, Microsoft">
+            </div>
+
+            <div class="form-group">
+                <label for="jobTitle">Job Title *</label>
+                <input type="text" id="jobTitle" required placeholder="e. g., Senior Software Engineer">
+            </div>
+
+            <div class="form-group">
+                <label for="position">Position *</label>
+                <input type="text" id="position" required placeholder="e.g., Backend Developer">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="minExperience">Min Experience (years) *</label>
+                    <input type="number" id="minExperience" min="0" required placeholder="e.g., 3">
+                </div>
+
+                <div class="form-group">
+                    <label for="salary">Monthly Salary ($) *</label>
+                    <input type="number" id="salary" min="0" required placeholder="e.g., 5000">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="requiredSkills">Required Skills (comma-separated) *</label>
+                <input type="text" id="requiredSkills" required placeholder="e.g., C++, Python, SQL">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="education">Education Required *</label>
+                    <input type="text" id="education" required placeholder="e.g., BS Computer Science">
+                </div>
+
+                <div class="form-group">
+                    <label for="location">Location *</label>
+                    <input type="text" id="location" required placeholder="e.g., California">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Job Description *</label>
+                <textarea id="description" required placeholder="Describe the role, responsibilities, and requirements..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+                ✅ Post Job
+            </button>
+
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='companies.html'">
+                ← Back to Companies
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+
+        document.getElementById('companyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Posting...';
+
+            const formData = {
+                companyName: document. getElementById('companyName').value.trim(),
+                jobTitle: document.getElementById('jobTitle').value.trim(),
+                position: document. getElementById('position').value.trim(),
+                minExperience: parseInt(document.getElementById('minExperience').value),
+                salary: parseInt(document.getElementById('salary').value),
+                requiredSkills: document.getElementById('requiredSkills').value.trim(),
+                education: document.getElementById('education').value.trim(),
+                location: document.getElementById('location').value.trim(),
+                description: document.getElementById('description').value.trim()
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/company/add`, {
+                    method: 'POST',
+                    headers:  {
+                        'Content-Type': 'application/json'
+                    },
+                    body:  JSON.stringify(formData),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert('✅ Job posted successfully!  Redirecting... ', 'success');
+                    
+                    setTimeout(() => {
+                        window. location.href = 'companies. html';
+                    }, 2000);
+                } else {
+                    throw new Error(data.message || 'Failed to post job');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('❌ ' + error.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '✅ Post Job';
+            }
+        });
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert. className = `alert alert-${type} show`;
+        }
+    </script>
+</body>
+</html>

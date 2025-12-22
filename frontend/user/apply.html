@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply for Job</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 40px;
+            max-width:  600px;
+            width:  100%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .company-info {
+            background: #f5f7fa;
+            padding: 15px;
+            border-radius:  8px;
+            margin-bottom: 30px;
+        }
+        
+        .company-info h2 {
+            color: #333;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        input[type="file"] {
+            width: 100%;
+            padding:  10px;
+            border: 2px dashed #667eea;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom:  20px;
+            display:  none;
+        }
+        
+        .alert.show {
+            display: block;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color:  #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        #progress {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition:  width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Apply for Job</h1>
+        
+        <div class="company-info">
+            <h2 id="companyName">Loading... </h2>
+            <p id="companyDetails"></p>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <form id="applyForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="cvFile">Upload Your CV (PDF only)</label>
+                <input type="file" id="cvFile" name="cv" accept="application/pdf" required>
+                <small style="color: #666;">Max file size: 5MB</small>
+            </div>
+
+            <div id="progress">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill">0%</div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+                ✅ Submit Application
+            </button>
+            
+            <button type="button" class="btn btn-secondary" onclick="window.location.href='dashboard.html'">
+                ← Back to Jobs
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let companyId = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Get company info from localStorage
+            companyId = localStorage.getItem('applyCompanyId');
+            const companyName = localStorage.getItem('applyCompanyName');
+
+            if (! companyId) {
+                showAlert('No company selected.  Redirecting... ', 'error');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 2000);
+                return;
+            }
+
+            document.getElementById('companyName').textContent = companyName;
+            document.getElementById('companyDetails').textContent = `Company ID: ${companyId}`;
+        });
+
+        document.getElementById('applyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('cvFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showAlert('Please select a CV file', 'error');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                showAlert('File size exceeds 5MB', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            const progress = document.getElementById('progress');
+            const progressFill = document. getElementById('progressFill');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Uploading...';
+            progress.style.display = 'block';
+
+            try {
+                // Step 1: Upload CV
+                showAlert('Step 1/2: Uploading CV...', 'info');
+                progressFill.style.width = '30%';
+                progressFill.textContent = '30%';
+
+                const formData = new FormData();
+                formData.append('cv', file);
+
+                const uploadResponse = await fetch(`${API_BASE}/upload_cv`, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                if (! uploadResponse.ok) {
+                    throw new Error('CV upload failed');
+                }
+
+                const uploadData = await uploadResponse.json();
+
+                if (! uploadData.success) {
+                    throw new Error(uploadData. message || 'CV upload failed');
+                }
+
+                progressFill.style.width = '60%';
+                progressFill.textContent = '60%';
+
+                // Step 2: Create application
+                showAlert('Step 2/2: Creating application...', 'info');
+
+                // We need the CV ID - let's get it from the user's CVs
+                const cvResponse = await fetch(`${API_BASE}/get_cv`, {
+                    credentials: 'include'
+                });
+
+                if (!cvResponse.ok) {
+                    throw new Error('Failed to get CV info');
+                }
+
+                const cvData = await cvResponse.json();
+                
+                if (!cvData.success) {
+                    throw new Error('No CV found');
+                }
+
+                const cvId = cvData.cv ?  cvData.cv.cvId : cvData.cvId;
+
+                progressFill.style.width = '80%';
+                progressFill. textContent = '80%';
+
+                // Create application
+                const applyResponse = await fetch(`${API_BASE}/apply`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type':  'application/json'
+                    },
+                    body: JSON.stringify({
+                        companyId: parseInt(companyId),
+                        cvId: cvId
+                    }),
+                    credentials: 'include'
+                });
+
+                const applyData = await applyResponse.json();
+
+                progressFill.style.width = '100%';
+                progressFill.textContent = '100%';
+
+                if (applyData.success) {
+                    showAlert(`✅ Application submitted successfully!  Match Score: ${applyData.matchScore. toFixed(1)}%`, 'success');
+                    
+                    setTimeout(() => {
+                        window. location.href = 'my-applications.html';
+                    }, 2000);
+                } else {
+                    throw new Error(applyData.message || 'Application failed');
+                }
+
+            } catch (error) {
+                console. error('Error:', error);
+                showAlert('❌ ' + error.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '✅ Submit Application';
+                progress.style.display = 'none';
+            }
+        });
+
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert. className = `alert alert-${type} show`;
+        }
+    </script>
+</body>
+</html>

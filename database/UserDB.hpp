@@ -1,9 +1,4 @@
-
-
-
-#ifndef USER_DATABASE_H
-#define USER_DATABASE_H
-
+#pragma once
 #include "BlockManager.hpp"
 #include "Btree.hpp"
 #include "DataRecords.hpp"
@@ -194,6 +189,7 @@ public:
     
     int32_t loginUser(const std::string& username, const std::string& password) {
         std::vector<UserRecord> users = getAllUsers();
+        //password pehle hash function se guzarlo
         std::string passHash = hashPassword(password);
         
         for (const auto& user : users) {
@@ -263,4 +259,3 @@ public:
     }
 };
 
-#endif
