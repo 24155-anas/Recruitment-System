@@ -62,7 +62,7 @@ int main() {
     // ========== CORS MIDDLEWARE ==========
     svr.set_pre_routing_handler([](const Request& req, Response& res) {
         // Allow requests from frontend server
-        res.set_header("Access-Control-Allow-Origin", "http://localhost:3000");
+        res.set_header("Access-Control-Allow-Origin", "*");
         res.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         res.set_header("Access-Control-Allow-Headers", "Content-Type, Cookie");
         res.set_header("Access-Control-Allow-Credentials", "true");
