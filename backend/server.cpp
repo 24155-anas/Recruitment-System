@@ -62,7 +62,7 @@ int main() {
     // ========== CORS MIDDLEWARE ==========
     svr.set_pre_routing_handler([](const Request& req, Response& res) {
         // Allow requests from frontend server
-        res.set_header("Access-Control-Allow-Origin", "http://localhost:3000"); // Change to your frontend URL
+        res.set_header("Access-Control-Allow-Origin", "http://localhost:3000");
         res.set_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         res.set_header("Access-Control-Allow-Headers", "Content-Type, Cookie");
         res.set_header("Access-Control-Allow-Credentials", "true");
@@ -108,7 +108,7 @@ int main() {
             int32_t userId = userdb->registerUser(username, password, email);
             if (userId > 0) {
                 std::string sessionId = sessionMgr->createSession(userId);
-                res.set_header("Set-Cookie", "SESSIONID=" + sessionId + "; Path=/; HttpOnly; SameSite=None; Secure");
+                res.set_header("Set-Cookie", "SESSIONID=" + sessionId + "; Path=/; HttpOnly; SameSite=Lax");
                 res. set_content(json({{"success", true}}).dump(), "application/json");
                 std::cout << "[SIGNUP] ✓ User registered: " << username << " (ID: " << userId << ")" << std::endl;
             } else {
@@ -138,8 +138,8 @@ int main() {
             int32_t userId = userdb->loginUser(username, password);
             if (userId > 0) {
                 std::string sessionId = sessionMgr->createSession(userId);
-                res.set_header("Set-Cookie", "SESSIONID=" + sessionId + "; Path=/; HttpOnly; SameSite=None; Secure");
-                
+
+                res.set_header("Set-Cookie", "SESSIONID=" + sessionId + "; Path=/; HttpOnly; SameSite=Lax");
                 // Check if admin
                 bool admin = isAdmin(userId);
                 
